@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>IZES | Decisões práticas para o campo</title>
+    <meta
+      name="description"
+      content="Aplicativo IZES para transformar dados do campo em decisões práticas para pequenos produtores."
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#app">Ir para o conteúdo</a>
+    <div class="app-shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">IZES</p>
+          <h1>Dados sozinhos não mudam o agro. Decisões mudam.</h1>
+        </div>
+        <button class="property-chip" type="button" aria-label="Propriedade ativa">
+          Sítio Boa Esperança
+        </button>
+      </header>
+
+      <main id="app" class="app-grid" aria-live="polite">
+        <aside class="sidebar" aria-label="Navegação principal">
+          <div class="brand-block">
+            <div class="brand-mark" aria-hidden="true">IZ</div>
+            <div>
+              <strong>Plataforma agrícola</strong>
+              <p>Informação em ação no momento certo.</p>
+            </div>
+          </div>
+          <nav id="nav" class="nav-list"></nav>
+          <section class="support-card">
+            <p class="support-label">Acessibilidade</p>
+            <h2>Leitura clara e prioridade direta</h2>
+            <p>
+              Cada tela resume o que fazer, onde agir e por que isso importa para a safra.
+            </p>
+          </section>
+        </aside>
+
+        <section class="content-panel">
+          <div id="hero"></div>
+          <div id="screen"></div>
+        </section>
+      </main>
+    </div>
+    <script src="./app.js"></script>
+  </body>
+</html>
