@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class BackendConfig {
+  static const _androidEmulatorBaseUrl = 'http://10.0.2.2:8000';
   static const _railwayBaseUrl =
       'https://teste-railway-izes-agro-production.up.railway.app';
 
@@ -14,7 +15,7 @@ class BackendConfig {
 
       switch (defaultTargetPlatform) {
         case TargetPlatform.android:
-          return _railwayBaseUrl;
+          return _androidEmulatorBaseUrl;
         default:
           return _railwayBaseUrl;
       }

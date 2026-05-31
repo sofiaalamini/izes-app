@@ -37,6 +37,22 @@ class _AiAssistantPageState extends State<AiAssistantPage> {
   Uint8List? _selectedImageBytes;
   String _loadingMessage = 'Analisando sensores e clima...';
 
+  Future<void> _handleSend() async {
+    if (_loading) return;
+
+    final question = _controller.text.trim();
+    if (_selectedImage != null && _selectedImageBytes != null) {
+      await _sendImageWithOptionalMessage(
+        image: _selectedImage!,
+        imageBytes: _selectedImageBytes!,
+        question: question,
+      );
+      return;
+    }
+
+    await _sendQuestion(question);
+  }
+
   Future<void> _sendQuestion(String question) async {
     if (question.trim().isEmpty || _loading) return;
 
@@ -93,8 +109,6 @@ class _AiAssistantPageState extends State<AiAssistantPage> {
         _selectedImage = image;
         _selectedImageBytes = imageBytes;
       });
-
-      await _sendImage(image, imageBytes);
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -138,43 +152,45 @@ class _AiAssistantPageState extends State<AiAssistantPage> {
     );
   }
 
-  Future<void> _sendImage(XFile image, Uint8List imageBytes) async {
-    if (_loading) return;
+  Future<void> _sendImageWithOptionalMessage({
+    required XFile image,
+    required Uint8List imageBytes,
+    required String question,
+  }) async {
+    if (_loading || (question.isEmpty && image.path.isEmpty)) return;
 
     setState(() {
       _loading = true;
       _loadingMessage = 'Analisando imagem...';
       _messages.add(
-        ChatMessage(
-          text: 'Imagem enviada para analise.',
-          isUser: true,
-          imageBytes: imageBytes,
-        ),
+        ChatMessage(text: question, isUser: true, imageBytes: imageBytes),
       );
+      _controller.clear();
+      _selectedImage = null;
+      _selectedImageBytes = null;
     });
 
     try {
       final sensorId = await _resolveSensorId();
       final reply = await _assistantService.analyzeImage(
         image.path,
+        message: question,
         sensorId: sensorId,
       );
       if (!mounted) return;
       setState(() {
         _messages.add(ChatMessage(text: reply, isUser: false));
         _loading = false;
-        _selectedImage = null;
-        _selectedImageBytes = null;
       });
     } on AiAssistantException catch (error) {
+      debugPrint('AiAssistantPage image send error: $error');
       if (!mounted) return;
       setState(() {
         _messages.add(ChatMessage(text: error.message, isUser: false));
         _loading = false;
-        _selectedImage = null;
-        _selectedImageBytes = null;
       });
     } catch (_) {
+      debugPrint('AiAssistantPage image send unexpected error.');
       if (!mounted) return;
       setState(() {
         _messages.add(
@@ -184,8 +200,6 @@ class _AiAssistantPageState extends State<AiAssistantPage> {
           ),
         );
         _loading = false;
-        _selectedImage = null;
-        _selectedImageBytes = null;
       });
     }
   }
@@ -407,7 +421,7 @@ class _AiAssistantPageState extends State<AiAssistantPage> {
                             focusedBorder: InputBorder.none,
                             isCollapsed: true,
                           ),
-                          onSubmitted: _sendQuestion,
+                          onSubmitted: (_) => _handleSend(),
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -419,9 +433,7 @@ class _AiAssistantPageState extends State<AiAssistantPage> {
                       ),
                       const SizedBox(width: 4),
                       FilledButton(
-                        onPressed: _loading
-                            ? null
-                            : () => _sendQuestion(_controller.text),
+                        onPressed: _loading ? null : _handleSend,
                         style: FilledButton.styleFrom(
                           minimumSize: const Size(46, 46),
                           padding: EdgeInsets.zero,

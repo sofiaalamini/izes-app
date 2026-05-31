@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 import '../config/backend_config.dart';
@@ -51,9 +52,11 @@ class ApiClient {
     Object? body,
     bool useAppToken = false,
     bool authenticated = false,
+    String? debugLabel,
   }) async {
+    final uri = _buildUri(path, queryParameters);
     final response = await _client.post(
-      _buildUri(path, queryParameters),
+      uri,
       headers: await _buildHeaders(
         useAppToken: useAppToken,
         authenticated: authenticated,
@@ -61,6 +64,7 @@ class ApiClient {
       ),
       body: body == null ? null : jsonEncode(body),
     );
+    _logResponse(debugLabel, uri, response);
     return _decodeMap(response);
   }
 
@@ -72,11 +76,10 @@ class ApiClient {
     required String filePath,
     bool useAppToken = false,
     bool authenticated = false,
+    String? debugLabel,
   }) async {
-    final request = http.MultipartRequest(
-      'POST',
-      _buildUri(path, queryParameters),
-    );
+    final uri = _buildUri(path, queryParameters);
+    final request = http.MultipartRequest('POST', uri);
     request.headers.addAll(
       await _buildHeaders(
         useAppToken: useAppToken,
@@ -90,6 +93,7 @@ class ApiClient {
 
     final streamedResponse = await _client.send(request);
     final response = await http.Response.fromStream(streamedResponse);
+    _logResponse(debugLabel, uri, response);
     return _decodeMap(response);
   }
 
@@ -150,6 +154,13 @@ class ApiClient {
     }
 
     return jsonDecode(response.body);
+  }
+
+  void _logResponse(String? debugLabel, Uri uri, http.Response response) {
+    if (debugLabel == null || debugLabel.isEmpty) return;
+    debugPrint('$debugLabel URL: $uri');
+    debugPrint('$debugLabel statusCode: ${response.statusCode}');
+    debugPrint('$debugLabel body: ${response.body}');
   }
 }
 

@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 import '../config/backend_config.dart';
 import 'api_client.dart';
 import 'auth_service.dart';
@@ -34,6 +36,7 @@ class AiAssistantService {
         '/api/ia/chat',
         useAppToken: true,
         queryParameters: queryParameters,
+        debugLabel: 'IA chat',
       );
 
       final reply = '${data['resposta_texto'] ?? ''}'.trim();
@@ -48,6 +51,7 @@ class AiAssistantService {
 
       return 'Nao consegui gerar uma resposta agora.';
     } on ApiException catch (error) {
+      debugPrint('IA chat error: $error');
       if (error.message.contains('HTTP 401')) {
         throw const AiAssistantException(
           'Sua sessao expirou ou o token do app esta invalido.',
@@ -56,14 +60,20 @@ class AiAssistantService {
       throw const AiAssistantException(
         'Nao foi possivel consultar a IA agora.',
       );
-    } catch (_) {
+    } catch (error, stackTrace) {
+      debugPrint('IA chat unexpected error: $error');
+      debugPrintStack(stackTrace: stackTrace);
       throw const AiAssistantException(
         'Nao foi possivel consultar a IA agora.',
       );
     }
   }
 
-  Future<String> analyzeImage(String imagePath, {String? sensorId}) async {
+  Future<String> analyzeImage(
+    String imagePath, {
+    String? message,
+    String? sensorId,
+  }) async {
     final clientId = AuthService().resolvedClientId;
     if (clientId.isEmpty) {
       throw const AiAssistantException(
@@ -78,8 +88,17 @@ class AiAssistantService {
 
     try {
       final fields = <String, String>{'cliente_id': clientId};
+      final trimmedMessage = message?.trim() ?? '';
+      if (trimmedMessage.isNotEmpty) {
+        fields['mensagem'] = trimmedMessage;
+      }
       if (sensorId != null && sensorId.trim().isNotEmpty) {
         fields['sensor_id'] = sensorId.trim();
+      }
+
+      debugPrint('IA multipart file field: imagem');
+      if (trimmedMessage.isNotEmpty) {
+        debugPrint('IA multipart text field: mensagem');
       }
 
       final data = await _apiClient.postMultipart(
@@ -88,6 +107,7 @@ class AiAssistantService {
         fields: fields,
         fileField: 'imagem',
         filePath: imagePath,
+        debugLabel: 'IA image',
       );
 
       final reply = '${data['resposta'] ?? data['resposta_texto'] ?? ''}'
@@ -98,6 +118,7 @@ class AiAssistantService {
 
       return 'Nao consegui analisar a imagem agora.';
     } on ApiException catch (error) {
+      debugPrint('IA image error: $error');
       if (error.message.contains('HTTP 401')) {
         throw const AiAssistantException(
           'Sua sessao expirou ou o token do app esta invalido.',
@@ -106,7 +127,9 @@ class AiAssistantService {
       throw const AiAssistantException(
         'Nao foi possivel analisar a imagem agora.',
       );
-    } catch (_) {
+    } catch (error, stackTrace) {
+      debugPrint('IA image unexpected error: $error');
+      debugPrintStack(stackTrace: stackTrace);
       throw const AiAssistantException(
         'Nao foi possivel analisar a imagem agora.',
       );
