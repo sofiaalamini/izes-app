@@ -1,4 +1,7 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../../../core/models/izes_models.dart';
 import '../../../../core/services/ai_assistant_service.dart';
@@ -19,6 +22,7 @@ class _AiAssistantPageState extends State<AiAssistantPage> {
   final AiAssistantService _assistantService = AiAssistantService();
   final SensorService _sensorService = SensorService();
   final TextEditingController _controller = TextEditingController();
+  final ImagePicker _imagePicker = ImagePicker();
   final List<ChatMessage> _messages = const [
     ChatMessage(
       text:
@@ -29,12 +33,16 @@ class _AiAssistantPageState extends State<AiAssistantPage> {
 
   bool _loading = false;
   String? _sensorId;
+  XFile? _selectedImage;
+  Uint8List? _selectedImageBytes;
+  String _loadingMessage = 'Analisando sensores e clima...';
 
   Future<void> _sendQuestion(String question) async {
     if (question.trim().isEmpty || _loading) return;
 
     setState(() {
       _loading = true;
+      _loadingMessage = 'Analisando sensores e clima...';
       _messages.add(ChatMessage(text: question.trim(), isUser: true));
       _controller.clear();
     });
@@ -66,6 +74,118 @@ class _AiAssistantPageState extends State<AiAssistantPage> {
           ),
         );
         _loading = false;
+      });
+    }
+  }
+
+  Future<void> _pickImage(ImageSource source) async {
+    if (_loading) return;
+
+    try {
+      final image = await _imagePicker.pickImage(
+        source: source,
+        imageQuality: 85,
+      );
+      if (image == null || !mounted) return;
+      final imageBytes = await image.readAsBytes();
+
+      setState(() {
+        _selectedImage = image;
+        _selectedImageBytes = imageBytes;
+      });
+
+      await _sendImage(image, imageBytes);
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Nao foi possivel abrir a camera ou galeria agora.'),
+        ),
+      );
+    }
+  }
+
+  Future<void> _showImageSourceOptions() async {
+    if (_loading) return;
+
+    await showModalBottomSheet<void>(
+      context: context,
+      builder: (context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.photo_camera_outlined),
+                title: const Text('Tirar foto'),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  _pickImage(ImageSource.camera);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_library_outlined),
+                title: const Text('Escolher da galeria'),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  _pickImage(ImageSource.gallery);
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _sendImage(XFile image, Uint8List imageBytes) async {
+    if (_loading) return;
+
+    setState(() {
+      _loading = true;
+      _loadingMessage = 'Analisando imagem...';
+      _messages.add(
+        ChatMessage(
+          text: 'Imagem enviada para analise.',
+          isUser: true,
+          imageBytes: imageBytes,
+        ),
+      );
+    });
+
+    try {
+      final sensorId = await _resolveSensorId();
+      final reply = await _assistantService.analyzeImage(
+        image.path,
+        sensorId: sensorId,
+      );
+      if (!mounted) return;
+      setState(() {
+        _messages.add(ChatMessage(text: reply, isUser: false));
+        _loading = false;
+        _selectedImage = null;
+        _selectedImageBytes = null;
+      });
+    } on AiAssistantException catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _messages.add(ChatMessage(text: error.message, isUser: false));
+        _loading = false;
+        _selectedImage = null;
+        _selectedImageBytes = null;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _messages.add(
+          const ChatMessage(
+            text: 'Nao foi possivel analisar a imagem agora.',
+            isUser: false,
+          ),
+        );
+        _loading = false;
+        _selectedImage = null;
+        _selectedImageBytes = null;
       });
     }
   }
@@ -158,10 +278,30 @@ class _AiAssistantPageState extends State<AiAssistantPage> {
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(color: IzesColors.line),
                         ),
-                        child: Text(
-                          message.text,
-                          style: Theme.of(context).textTheme.bodyLarge
-                              ?.copyWith(color: IzesColors.ink),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (message.imageBytes != null) ...[
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(12),
+                                child: Image.memory(
+                                  message.imageBytes!,
+                                  width: 132,
+                                  height: 132,
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                              if (message.text.isNotEmpty)
+                                const SizedBox(height: 12),
+                            ],
+                            if (message.text.isNotEmpty)
+                              Text(
+                                message.text,
+                                style: Theme.of(context).textTheme.bodyLarge
+                                    ?.copyWith(color: IzesColors.ink),
+                              ),
+                          ],
                         ),
                       ),
                     ),
@@ -185,7 +325,7 @@ class _AiAssistantPageState extends State<AiAssistantPage> {
                             child: CircularProgressIndicator(strokeWidth: 2),
                           ),
                           SizedBox(width: 10),
-                          Text('Analisando sensores e clima...'),
+                          Text(_loadingMessage),
                         ],
                       ),
                     ),
@@ -201,34 +341,94 @@ class _AiAssistantPageState extends State<AiAssistantPage> {
             child: AppSurfaceCard(
               borderRadius: 18,
               padding: const EdgeInsets.fromLTRB(14, 12, 12, 12),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.end,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _controller,
-                      maxLines: 3,
-                      minLines: 1,
-                      decoration: const InputDecoration(
-                        hintText: 'Escreva sua pergunta',
-                        border: InputBorder.none,
-                        enabledBorder: InputBorder.none,
-                        focusedBorder: InputBorder.none,
-                        isCollapsed: true,
+                  if (_selectedImage != null &&
+                      _selectedImageBytes != null) ...[
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: Stack(
+                          children: [
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(12),
+                              child: Image.memory(
+                                _selectedImageBytes!,
+                                width: 72,
+                                height: 72,
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                            Positioned(
+                              top: 4,
+                              right: 4,
+                              child: GestureDetector(
+                                onTap: _loading
+                                    ? null
+                                    : () {
+                                        setState(() {
+                                          _selectedImage = null;
+                                          _selectedImageBytes = null;
+                                        });
+                                      },
+                                child: Container(
+                                  decoration: const BoxDecoration(
+                                    color: Colors.black54,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  padding: const EdgeInsets.all(4),
+                                  child: const Icon(
+                                    Icons.close_rounded,
+                                    color: Colors.white,
+                                    size: 14,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                      onSubmitted: _sendQuestion,
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  FilledButton(
-                    onPressed: _loading
-                        ? null
-                        : () => _sendQuestion(_controller.text),
-                    style: FilledButton.styleFrom(
-                      minimumSize: const Size(46, 46),
-                      padding: EdgeInsets.zero,
-                    ),
-                    child: const Icon(Icons.arrow_upward_rounded, size: 18),
+                  ],
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: _controller,
+                          maxLines: 3,
+                          minLines: 1,
+                          decoration: const InputDecoration(
+                            hintText: 'Escreva sua pergunta',
+                            border: InputBorder.none,
+                            enabledBorder: InputBorder.none,
+                            focusedBorder: InputBorder.none,
+                            isCollapsed: true,
+                          ),
+                          onSubmitted: _sendQuestion,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      IconButton(
+                        onPressed: _loading ? null : _showImageSourceOptions,
+                        tooltip: 'Enviar imagem',
+                        icon: const Icon(Icons.photo_camera_outlined),
+                        color: IzesColors.ink,
+                      ),
+                      const SizedBox(width: 4),
+                      FilledButton(
+                        onPressed: _loading
+                            ? null
+                            : () => _sendQuestion(_controller.text),
+                        style: FilledButton.styleFrom(
+                          minimumSize: const Size(46, 46),
+                          padding: EdgeInsets.zero,
+                        ),
+                        child: const Icon(Icons.arrow_upward_rounded, size: 18),
+                      ),
+                    ],
                   ),
                 ],
               ),

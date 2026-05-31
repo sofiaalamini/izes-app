@@ -57,9 +57,39 @@ class ApiClient {
       headers: await _buildHeaders(
         useAppToken: useAppToken,
         authenticated: authenticated,
+        sendJsonBody: body != null,
       ),
       body: body == null ? null : jsonEncode(body),
     );
+    return _decodeMap(response);
+  }
+
+  Future<Map<String, dynamic>> postMultipart(
+    String path, {
+    Map<String, String>? queryParameters,
+    Map<String, String>? fields,
+    required String fileField,
+    required String filePath,
+    bool useAppToken = false,
+    bool authenticated = false,
+  }) async {
+    final request = http.MultipartRequest(
+      'POST',
+      _buildUri(path, queryParameters),
+    );
+    request.headers.addAll(
+      await _buildHeaders(
+        useAppToken: useAppToken,
+        authenticated: authenticated,
+      ),
+    );
+    if (fields != null && fields.isNotEmpty) {
+      request.fields.addAll(fields);
+    }
+    request.files.add(await http.MultipartFile.fromPath(fileField, filePath));
+
+    final streamedResponse = await _client.send(request);
+    final response = await http.Response.fromStream(streamedResponse);
     return _decodeMap(response);
   }
 
@@ -71,6 +101,7 @@ class ApiClient {
   Future<Map<String, String>> _buildHeaders({
     required bool useAppToken,
     required bool authenticated,
+    bool sendJsonBody = false,
   }) async {
     final headers = <String, String>{'Accept': 'application/json'};
 
@@ -83,7 +114,7 @@ class ApiClient {
           'Bearer ${await _authService.getAccessToken()}';
     }
 
-    if (authenticated) {
+    if (sendJsonBody) {
       headers['Content-Type'] = 'application/json';
     }
 

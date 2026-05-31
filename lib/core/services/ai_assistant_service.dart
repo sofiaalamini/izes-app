@@ -62,6 +62,56 @@ class AiAssistantService {
       );
     }
   }
+
+  Future<String> analyzeImage(String imagePath, {String? sensorId}) async {
+    final clientId = AuthService().resolvedClientId;
+    if (clientId.isEmpty) {
+      throw const AiAssistantException(
+        'Cliente nao configurado para usar o assistente.',
+      );
+    }
+    if (!BackendConfig.hasAppToken) {
+      throw const AiAssistantException(
+        'API_APP_TOKEN nao configurado no .env.',
+      );
+    }
+
+    try {
+      final fields = <String, String>{'cliente_id': clientId};
+      if (sensorId != null && sensorId.trim().isNotEmpty) {
+        fields['sensor_id'] = sensorId.trim();
+      }
+
+      final data = await _apiClient.postMultipart(
+        '/api/ia/analisar-imagem',
+        useAppToken: true,
+        fields: fields,
+        fileField: 'imagem',
+        filePath: imagePath,
+      );
+
+      final reply = '${data['resposta'] ?? data['resposta_texto'] ?? ''}'
+          .trim();
+      if (reply.isNotEmpty) {
+        return reply;
+      }
+
+      return 'Nao consegui analisar a imagem agora.';
+    } on ApiException catch (error) {
+      if (error.message.contains('HTTP 401')) {
+        throw const AiAssistantException(
+          'Sua sessao expirou ou o token do app esta invalido.',
+        );
+      }
+      throw const AiAssistantException(
+        'Nao foi possivel analisar a imagem agora.',
+      );
+    } catch (_) {
+      throw const AiAssistantException(
+        'Nao foi possivel analisar a imagem agora.',
+      );
+    }
+  }
 }
 
 class AiAssistantException implements Exception {

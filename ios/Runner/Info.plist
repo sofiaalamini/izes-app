@@ -47,5 +47,9 @@
 	<true/>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>O IZES usa sua localizacao para mostrar o clima atual da propriedade.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>O IZES usa a camera para enviar fotos para analise da IA.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>O IZES acessa sua galeria para enviar imagens para analise da IA.</string>
 </dict>
 </plist>

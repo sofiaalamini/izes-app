@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 enum AlertLevel { urgent, attention, ok }
 
 class DashboardSummary {
@@ -38,7 +40,8 @@ class AlertItem {
   final String? ph;
 
   factory AlertItem.fromDashboardSensor(Map<String, dynamic> sensor) {
-    final reading = sensor['ultima_leitura'] as Map<String, dynamic>? ?? const {};
+    final reading =
+        sensor['ultima_leitura'] as Map<String, dynamic>? ?? const {};
     final critical = reading['nivel_critico'] == true;
     final active = reading['alerta_ativo'] == true;
     final title = '${sensor['nome'] ?? sensor['sensor_id'] ?? 'Sensor'}';
@@ -84,8 +87,8 @@ class AlertItem {
   factory AlertItem.fromApiAlertas(Map<String, dynamic> json) {
     final severity = '${json['severidade'] ?? ''}'.toLowerCase();
     final parametro = '${json['parametro'] ?? 'Manejo'}'.trim();
-    final local =
-        '${json['zona_id'] ?? json['sensor_id'] ?? 'area monitorada'}'.trim();
+    final local = '${json['zona_id'] ?? json['sensor_id'] ?? 'area monitorada'}'
+        .trim();
     return AlertItem(
       level: switch (severity) {
         'critico' || 'alto' => AlertLevel.urgent,
@@ -103,8 +106,13 @@ class AlertItem {
 }
 
 class ChatMessage {
-  const ChatMessage({required this.text, required this.isUser});
+  const ChatMessage({
+    required this.text,
+    required this.isUser,
+    this.imageBytes,
+  });
 
   final String text;
   final bool isUser;
+  final Uint8List? imageBytes;
 }
