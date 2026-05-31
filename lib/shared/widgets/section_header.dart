@@ -21,19 +21,27 @@ class SectionHeader extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-          decoration: BoxDecoration(
-            color: const Color(0xFFEDE7D8),
-            borderRadius: BorderRadius.circular(999),
-          ),
-          child: Text(eyebrow, style: textTheme.labelMedium),
+        SizedBox(height: compact ? 0 : 2),
+        Text(
+          title,
+          style: compact ? textTheme.titleLarge : textTheme.headlineMedium,
         ),
-        SizedBox(height: compact ? 10 : 14),
-        Text(title, style: compact ? textTheme.titleLarge : textTheme.headlineMedium),
         const SizedBox(height: 6),
-        Text(description, style: textTheme.bodyMedium),
+        ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 360),
+          child: Text(description, style: textTheme.bodyMedium),
+        ),
       ],
     );
   }
+}
+
+class AppSectionHeader extends SectionHeader {
+  const AppSectionHeader({
+    super.key,
+    required super.eyebrow,
+    required super.title,
+    required super.description,
+    super.compact = false,
+  });
 }

@@ -1,19 +1,21 @@
 import 'package:flutter/material.dart';
 
 class IzesColors {
-  static const canvas = Color(0xFFF4F1E8);
-  static const surface = Color(0xFFFCFBF7);
-  static const surfaceAlt = Color(0xFFEDE7D8);
-  static const ink = Color(0xFF20261F);
-  static const muted = Color(0xFF5F685B);
-  static const line = Color(0xFFD9D4C7);
-  static const green = Color(0xFF2F6A3F);
-  static const greenSoft = Color(0xFFDCE9DD);
-  static const earth = Color(0xFF8A5A3C);
-  static const earthSoft = Color(0xFFF1E1D4);
-  static const urgent = Color(0xFF8D3B2F);
-  static const urgentSoft = Color(0xFFF5DDD7);
-  static const attention = Color(0xFF8A6A27);
+  static const canvas = Color(0xFFF3F0E6);
+  static const surface = Color(0xFFFFFCF7);
+  static const surfaceAlt = Color(0xFFF1E8D9);
+  static const surfaceSoft = Color(0xFFF7F3EA);
+  static const ink = Color(0xFF1E261C);
+  static const muted = Color(0xFF64705E);
+  static const line = Color(0xFFDCD4C5);
+  static const green = Color(0xFF2E6840);
+  static const greenDark = Color(0xFF214E30);
+  static const greenSoft = Color(0xFFD8E7D8);
+  static const earth = Color(0xFF8A5D41);
+  static const earthSoft = Color(0xFFF2E4D6);
+  static const urgent = Color(0xFF94483B);
+  static const urgentSoft = Color(0xFFF4DED7);
+  static const attention = Color(0xFF8B7130);
   static const attentionSoft = Color(0xFFF2E8CC);
 }
 
@@ -45,7 +47,7 @@ class IzesTheme {
           color: IzesColors.ink,
         ),
         headlineMedium: TextStyle(
-          fontSize: 24,
+          fontSize: 22,
           fontWeight: FontWeight.w700,
           letterSpacing: -0.6,
           color: IzesColors.ink,
@@ -53,23 +55,30 @@ class IzesTheme {
         titleLarge: TextStyle(
           fontSize: 19,
           fontWeight: FontWeight.w700,
+          height: 1.1,
           color: IzesColors.ink,
         ),
         titleMedium: TextStyle(
           fontSize: 15,
           fontWeight: FontWeight.w600,
+          height: 1.2,
           color: IzesColors.ink,
         ),
-        bodyLarge: TextStyle(fontSize: 16, height: 1.45, color: IzesColors.ink),
+        bodyLarge: TextStyle(fontSize: 16, height: 1.5, color: IzesColors.ink),
         bodyMedium: TextStyle(
           fontSize: 14,
+          height: 1.55,
+          color: IzesColors.muted,
+        ),
+        bodySmall: TextStyle(
+          fontSize: 12,
           height: 1.45,
           color: IzesColors.muted,
         ),
         labelMedium: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w700,
-          letterSpacing: 0.6,
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          letterSpacing: 0.35,
           color: IzesColors.muted,
         ),
       ),
@@ -87,8 +96,9 @@ class IzesTheme {
       cardTheme: CardThemeData(
         color: IzesColors.surface,
         elevation: 0,
+        shadowColor: const Color(0x33203321),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(16),
           side: const BorderSide(color: IzesColors.line),
         ),
       ),
@@ -129,11 +139,14 @@ class IzesTheme {
       ),
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: IzesColors.surface,
-        height: 64,
-        indicatorColor: const Color(0x00000000),
+        surfaceTintColor: Colors.transparent,
+        shadowColor: const Color(0x1A2E6840),
+        elevation: 0,
+        height: 66,
+        indicatorColor: IzesColors.surfaceAlt,
         labelTextStyle: WidgetStateProperty.resolveWith(
           (states) => TextStyle(
-            fontSize: 11,
+            fontSize: 10.5,
             fontWeight: states.contains(WidgetState.selected)
                 ? FontWeight.w700
                 : FontWeight.w600,

@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/models/sensor_model.dart';
 import '../../../../core/models/weather_model.dart';
+import '../../../../core/services/auth_service.dart';
 import '../../../../core/services/sensor_service.dart';
 import '../../../../core/services/weather_service.dart';
 import '../../../../core/theme/izes_theme.dart';
+import '../../../../shared/widgets/app_state_card.dart';
 import '../../../../shared/widgets/section_header.dart';
 import '../widgets/property_sensors_card.dart';
 import '../widgets/weather_card.dart';
@@ -81,6 +83,19 @@ class _MonitoringPageState extends State<MonitoringPage> {
     return 'O clima nao esta disponivel agora.';
   }
 
+  bool _isSessionExpiredMessage(String message) {
+    final normalized = message.toLowerCase();
+    return normalized.contains('401') ||
+        normalized.contains('unauthorized') ||
+        normalized.contains('token') ||
+        normalized.contains('sessao') ||
+        normalized.contains('session');
+  }
+
+  void _handleSessionExpired() {
+    AuthService().logout();
+  }
+
   @override
   Widget build(BuildContext context) {
     return RefreshIndicator(
@@ -91,82 +106,133 @@ class _MonitoringPageState extends State<MonitoringPage> {
         children: [
           const SectionHeader(
             eyebrow: 'Clima e sensores',
-            title: 'Leitura rapida do ambiente',
+            title: 'Clima e leituras de campo',
             description:
-                'Clima do sensor selecionado e status mais recente dos sensores.',
+                'Veja a condicao externa e o que exige atencao no campo sem misturar contexto climatico com leitura de sensor.',
             compact: true,
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 20),
+          const SectionHeader(
+            eyebrow: 'Condicao externa',
+            title: 'Clima atual da area monitorada',
+            description:
+                'Base para decidir irrigacao, aplicacao e monitoramento nas proximas horas.',
+            compact: true,
+          ),
+          const SizedBox(height: 12),
           FutureBuilder<WeatherModel>(
             future: _weatherFuture,
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
-                return const _StateCard(
+                return _StateCard(
                   title: 'Clima atual',
-                  message: 'Atualizando informacoes do sensor...',
+                  message: 'Atualizando as condicoes mais recentes da area.',
+                  supportingText: 'Isso leva apenas alguns instantes.',
                   loading: true,
                 );
               }
 
               if (snapshot.hasError) {
+                final message = _weatherErrorMessage(snapshot.error);
+                final expiredSession = _isSessionExpiredMessage(message);
                 return _StateCard(
                   title: 'Clima atual',
-                  message: _weatherErrorMessage(snapshot.error),
-                  actionLabel: 'Tentar novamente',
-                  onAction: () => setState(() {
-                    final sensorId = _selectedSensorId;
-                    if (sensorId == null) {
-                      _weatherFuture = Future<WeatherModel>.error(
-                        const WeatherException(
-                          'Nenhum sensor disponivel para consultar o clima.',
-                        ),
-                      );
-                    } else {
-                      _weatherFuture = _weatherService.getWeatherBySensor(
-                        sensorId,
-                      );
-                    }
-                  }),
+                  message: expiredSession
+                      ? 'Sua sessao expirou. Entre novamente para continuar.'
+                      : message,
+                  supportingText: expiredSession
+                      ? 'Ao entrar de novo, o app volta a carregar clima e sensores normalmente.'
+                      : 'Tente atualizar de novo em instantes.',
+                  actionLabel: expiredSession
+                      ? 'Entrar novamente'
+                      : 'Tentar novamente',
+                  onAction: expiredSession
+                      ? _handleSessionExpired
+                      : () => setState(() {
+                          final sensorId = _selectedSensorId;
+                          if (sensorId == null) {
+                            _weatherFuture = Future<WeatherModel>.error(
+                              const WeatherException(
+                                'Nenhum sensor disponivel para consultar o clima.',
+                              ),
+                            );
+                          } else {
+                            _weatherFuture = _weatherService.getWeatherBySensor(
+                              sensorId,
+                            );
+                          }
+                        }),
+                  tone: expiredSession
+                      ? AppStateTone.warning
+                      : AppStateTone.neutral,
                 );
               }
 
               final weather = snapshot.data;
               if (weather == null) {
-                return const _StateCard(
+                return _StateCard(
                   title: 'Clima atual',
                   message: 'Sem atualizacao de clima no momento.',
+                  supportingText:
+                      'Tente novamente quando houver uma nova consulta para esta area.',
                 );
               }
 
               return WeatherCard(weather: weather);
             },
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
+          const SectionHeader(
+            eyebrow: 'Leituras de campo',
+            title: 'Sensores da propriedade',
+            description:
+                'Ultimas leituras recebidas para identificar rapidamente o que precisa de acompanhamento.',
+            compact: true,
+          ),
+          const SizedBox(height: 12),
           FutureBuilder<List<SensorModel>>(
             future: _sensorsFuture,
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
-                return const _StateCard(
+                return _StateCard(
                   title: 'Sensores da propriedade',
-                  message: 'Buscando as leituras mais recentes...',
+                  message: 'Buscando as leituras mais recentes.',
+                  supportingText:
+                      'Os sensores ativos serao exibidos assim que a consulta terminar.',
                   loading: true,
                 );
               }
 
               if (snapshot.hasError) {
+                final message = snapshot.error.toString();
+                final expiredSession = _isSessionExpiredMessage(message);
                 return _StateCard(
                   title: 'Sensores da propriedade',
-                  message: 'Falha ao carregar sensores.',
-                  actionLabel: 'Recarregar',
-                  onAction: () => setState(_loadData),
+                  message: expiredSession
+                      ? 'Sua sessao expirou. Entre novamente para continuar.'
+                      : 'Nao foi possivel carregar os sensores agora.',
+                  supportingText: expiredSession
+                      ? 'Ao entrar de novo, as leituras de campo voltam a aparecer aqui.'
+                      : 'Tente atualizar novamente em instantes.',
+                  actionLabel: expiredSession
+                      ? 'Entrar novamente'
+                      : 'Recarregar',
+                  onAction: expiredSession
+                      ? _handleSessionExpired
+                      : () => setState(_loadData),
+                  tone: expiredSession
+                      ? AppStateTone.warning
+                      : AppStateTone.neutral,
                 );
               }
 
               final sensors = snapshot.data ?? _currentSensors;
               if (sensors.isEmpty) {
-                return const _StateCard(
+                return _StateCard(
                   title: 'Sensores da propriedade',
-                  message: 'Nenhum sensor disponivel no momento.',
+                  message: 'Nenhum sensor encontrado para esta propriedade.',
+                  supportingText:
+                      'Quando houver sensores vinculados, as leituras mais recentes aparecem aqui.',
                 );
               }
 
@@ -187,40 +253,33 @@ class _StateCard extends StatelessWidget {
   const _StateCard({
     required this.title,
     required this.message,
+    this.supportingText,
     this.loading = false,
     this.actionLabel,
     this.onAction,
+    this.tone = AppStateTone.neutral,
   });
 
   final String title;
   final String message;
+  final String? supportingText;
   final bool loading;
   final String? actionLabel;
   final VoidCallback? onAction;
+  final AppStateTone tone;
 
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(title, style: Theme.of(context).textTheme.titleLarge),
-          const SizedBox(height: 8),
-          if (loading) ...[
-            const SizedBox(
-              height: 18,
-              width: 18,
-              child: CircularProgressIndicator(strokeWidth: 2.4),
-            ),
-            const SizedBox(height: 10),
-          ],
-          Text(message, style: Theme.of(context).textTheme.bodyMedium),
-          if (actionLabel != null && onAction != null) ...[
-            const SizedBox(height: 12),
-            OutlinedButton(onPressed: onAction, child: Text(actionLabel!)),
-          ],
-        ],
+      child: AppStateCard(
+        title: title,
+        message: message,
+        supportingText: supportingText,
+        loading: loading,
+        actionLabel: actionLabel,
+        onAction: onAction,
+        tone: tone,
       ),
     );
   }

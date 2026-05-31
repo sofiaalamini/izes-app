@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/models/izes_models.dart';
 import '../../../../core/services/ai_assistant_service.dart';
+import '../../../../core/services/sensor_service.dart';
 import '../../../../core/theme/izes_theme.dart';
+import '../../../../shared/widgets/app_state_card.dart';
 import '../../../../shared/widgets/app_surface_card.dart';
 import '../../../../shared/widgets/section_header.dart';
 
@@ -15,6 +17,7 @@ class AiAssistantPage extends StatefulWidget {
 
 class _AiAssistantPageState extends State<AiAssistantPage> {
   final AiAssistantService _assistantService = AiAssistantService();
+  final SensorService _sensorService = SensorService();
   final TextEditingController _controller = TextEditingController();
   final List<ChatMessage> _messages = const [
     ChatMessage(
@@ -25,6 +28,7 @@ class _AiAssistantPageState extends State<AiAssistantPage> {
   ].toList();
 
   bool _loading = false;
+  String? _sensorId;
 
   Future<void> _sendQuestion(String question) async {
     if (question.trim().isEmpty || _loading) return;
@@ -36,24 +40,49 @@ class _AiAssistantPageState extends State<AiAssistantPage> {
     });
 
     try {
-      final reply = await _assistantService.answerQuestion(question);
+      final sensorId = await _resolveSensorId();
+      final reply = await _assistantService.answerQuestion(
+        question,
+        sensorId: sensorId,
+      );
       if (!mounted) return;
       setState(() {
         _messages.add(ChatMessage(text: reply, isUser: false));
         _loading = false;
       });
-    } catch (error) {
+    } on AiAssistantException catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _messages.add(ChatMessage(text: error.message, isUser: false));
+        _loading = false;
+      });
+    } catch (_) {
       if (!mounted) return;
       setState(() {
         _messages.add(
           const ChatMessage(
-            text: 'Nao consegui responder agora. Tente novamente em instantes.',
+            text: 'Nao foi possivel consultar a IA agora.',
             isUser: false,
           ),
         );
         _loading = false;
       });
     }
+  }
+
+  Future<String?> _resolveSensorId() async {
+    if (_sensorId != null && _sensorId!.isNotEmpty) {
+      return _sensorId;
+    }
+
+    try {
+      final sensors = await _sensorService.fetchSensors();
+      if (sensors.isNotEmpty) {
+        _sensorId = sensors.first.id;
+      }
+    } catch (_) {}
+
+    return _sensorId;
   }
 
   @override
@@ -64,6 +93,8 @@ class _AiAssistantPageState extends State<AiAssistantPage> {
 
   @override
   Widget build(BuildContext context) {
+    final hasConversation = _messages.any((message) => message.isUser);
+    final visibleMessages = hasConversation ? _messages : _messages.skip(1);
     const suggestions = [
       'Devo irrigar hoje?',
       'Qual talhao precisa de atencao?',
@@ -79,11 +110,12 @@ class _AiAssistantPageState extends State<AiAssistantPage> {
             children: [
               const SectionHeader(
                 eyebrow: 'Assistente IZES',
-                title: 'Pergunte direto',
-                description: 'Respostas curtas para apoiar a decisao no campo.',
+                title: 'Apoio rapido para decidir no campo',
+                description:
+                    'Use o assistente para resumir prioridade, risco e proximos passos sem abrir varias telas.',
                 compact: true,
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
               Wrap(
                 spacing: 8,
                 runSpacing: 8,
@@ -96,22 +128,33 @@ class _AiAssistantPageState extends State<AiAssistantPage> {
                     )
                     .toList(),
               ),
-              const SizedBox(height: 14),
-              ..._messages.map(
+              const SizedBox(height: 16),
+              if (!hasConversation && !_loading)
+                const Padding(
+                  padding: EdgeInsets.only(bottom: 16),
+                  child: AppStateCard(
+                    title: 'Nenhuma conversa iniciada ainda',
+                    message:
+                        'Escolha uma pergunta acima ou escreva o que voce precisa decidir hoje.',
+                    supportingText:
+                        'Exemplos: irrigacao, risco de praga, sensores com atencao ou prioridade da semana.',
+                  ),
+                ),
+              ...visibleMessages.map(
                 (message) => Padding(
-                  padding: const EdgeInsets.only(bottom: 10),
+                  padding: const EdgeInsets.only(bottom: 12),
                   child: Align(
                     alignment: message.isUser
                         ? Alignment.centerRight
                         : Alignment.centerLeft,
                     child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 320),
+                      constraints: const BoxConstraints(maxWidth: 340),
                       child: Container(
-                        padding: const EdgeInsets.all(14),
+                        padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
                           color: message.isUser
                               ? IzesColors.greenSoft
-                              : IzesColors.surface,
+                              : IzesColors.surfaceSoft,
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(color: IzesColors.line),
                         ),
@@ -132,6 +175,7 @@ class _AiAssistantPageState extends State<AiAssistantPage> {
                     alignment: Alignment.centerLeft,
                     child: AppSurfaceCard(
                       backgroundColor: IzesColors.surfaceAlt,
+                      borderRadius: 16,
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -141,7 +185,7 @@ class _AiAssistantPageState extends State<AiAssistantPage> {
                             child: CircularProgressIndicator(strokeWidth: 2),
                           ),
                           SizedBox(width: 10),
-                          Text('Preparando resposta...'),
+                          Text('Analisando sensores e clima...'),
                         ],
                       ),
                     ),
@@ -154,25 +198,40 @@ class _AiAssistantPageState extends State<AiAssistantPage> {
           top: false,
           child: Padding(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _controller,
-                    decoration: const InputDecoration(
-                      hintText: 'Escreva sua pergunta',
+            child: AppSurfaceCard(
+              borderRadius: 18,
+              padding: const EdgeInsets.fromLTRB(14, 12, 12, 12),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _controller,
+                      maxLines: 3,
+                      minLines: 1,
+                      decoration: const InputDecoration(
+                        hintText: 'Escreva sua pergunta',
+                        border: InputBorder.none,
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: InputBorder.none,
+                        isCollapsed: true,
+                      ),
+                      onSubmitted: _sendQuestion,
                     ),
-                    onSubmitted: _sendQuestion,
                   ),
-                ),
-                const SizedBox(width: 8),
-                FilledButton(
-                  onPressed: _loading
-                      ? null
-                      : () => _sendQuestion(_controller.text),
-                  child: const Icon(Icons.arrow_upward_rounded, size: 18),
-                ),
-              ],
+                  const SizedBox(width: 8),
+                  FilledButton(
+                    onPressed: _loading
+                        ? null
+                        : () => _sendQuestion(_controller.text),
+                    style: FilledButton.styleFrom(
+                      minimumSize: const Size(46, 46),
+                      padding: EdgeInsets.zero,
+                    ),
+                    child: const Icon(Icons.arrow_upward_rounded, size: 18),
+                  ),
+                ],
+              ),
             ),
           ),
         ),

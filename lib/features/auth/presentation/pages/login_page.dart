@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/services/auth_service.dart';
 import '../../../../core/theme/izes_theme.dart';
+import '../../../../shared/widgets/app_state_card.dart';
 import '../../../../shared/widgets/app_surface_card.dart';
 
 class LoginPage extends StatefulWidget {
@@ -81,12 +82,12 @@ class _LoginPageState extends State<LoginPage> {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(20, 28, 20, 20),
           children: [
-            const SizedBox(height: 18),
+            const SizedBox(height: 28),
             Text(
               'IZES',
               style: theme.headlineLarge?.copyWith(
-                fontSize: 34,
-                fontWeight: FontWeight.w800,
+                fontSize: 32,
+                fontWeight: FontWeight.w700,
               ),
             ),
             const SizedBox(height: 8),
@@ -96,16 +97,7 @@ class _LoginPageState extends State<LoginPage> {
                   : 'Entre para acompanhar sua propriedade.',
               style: theme.bodyLarge?.copyWith(color: IzesColors.muted),
             ),
-            const SizedBox(height: 18),
-            Container(
-              height: 6,
-              width: 72,
-              decoration: BoxDecoration(
-                color: IzesColors.green,
-                borderRadius: BorderRadius.circular(999),
-              ),
-            ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
             AppSurfaceCard(
               borderRadius: 16,
               padding: const EdgeInsets.all(18),
@@ -117,6 +109,13 @@ class _LoginPageState extends State<LoginPage> {
                     Text(
                       _isRegisterMode ? 'Cadastro' : 'Login',
                       style: theme.titleLarge,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      _isRegisterMode
+                          ? 'Preencha os dados para comecar.'
+                          : 'Use seu e-mail e senha para entrar.',
+                      style: theme.bodyMedium,
                     ),
                     const SizedBox(height: 18),
                     if (_isRegisterMode) ...[
@@ -183,9 +182,7 @@ class _LoginPageState extends State<LoginPage> {
                       obscureText: true,
                       textInputAction: TextInputAction.done,
                       onFieldSubmitted: (_) => _isSubmitting ? null : _submit(),
-                      decoration: const InputDecoration(
-                        hintText: 'Sua senha',
-                      ),
+                      decoration: const InputDecoration(hintText: 'Sua senha'),
                       validator: (value) {
                         if ((value ?? '').length < 6) {
                           return 'A senha precisa ter pelo menos 6 caracteres.';
@@ -195,19 +192,10 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                     if (_errorMessage != null) ...[
                       const SizedBox(height: 14),
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: IzesColors.urgentSoft,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          _errorMessage!,
-                          style: theme.bodyMedium?.copyWith(
-                            color: IzesColors.urgent,
-                          ),
-                        ),
+                      AppStateCard(
+                        title: 'Nao foi possivel continuar',
+                        message: _errorMessage!,
+                        tone: AppStateTone.warning,
                       ),
                     ],
                     const SizedBox(height: 18),
@@ -246,6 +234,11 @@ class _LoginPageState extends State<LoginPage> {
                   ],
                 ),
               ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Ao entrar, voce acessa dashboard, alertas, clima e leituras dos sensores da propriedade.',
+              style: theme.bodySmall?.copyWith(color: IzesColors.muted),
             ),
           ],
         ),

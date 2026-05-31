@@ -4,7 +4,6 @@ import '../../../../core/models/izes_models.dart';
 import '../../../../core/models/sensor_model.dart';
 import '../../../../core/theme/izes_theme.dart';
 import '../../../../core/utils/date_time_formatter.dart';
-import '../../../../shared/widgets/app_surface_card.dart';
 import '../../../../shared/widgets/status_badge.dart';
 
 class PropertySensorsCard extends StatelessWidget {
@@ -23,29 +22,25 @@ class PropertySensorsCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context).textTheme;
 
-    return AppSurfaceCard(
-      borderRadius: 16,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Sensores da propriedade', style: theme.titleLarge),
-          const SizedBox(height: 4),
-          Text('Leituras mais recentes.', style: theme.bodyMedium),
-          const SizedBox(height: 12),
-          if (sensors.isEmpty)
-            Text('Nenhuma leitura recente encontrada.', style: theme.bodyMedium)
-          else
-            ...sensors.map(
-              (sensor) => _SensorTile(
-                sensor: sensor,
-                isSelected: sensor.id == selectedSensorId,
-                onTap: onSensorSelected == null
-                    ? null
-                    : () => onSensorSelected!(sensor.id),
-              ),
+    if (sensors.isEmpty) {
+      return Text(
+        'Nenhum sensor encontrado para esta propriedade.',
+        style: theme.bodyMedium,
+      );
+    }
+
+    return Column(
+      children: sensors
+          .map(
+            (sensor) => _SensorTile(
+              sensor: sensor,
+              isSelected: sensor.id == selectedSensorId,
+              onTap: onSensorSelected == null
+                  ? null
+                  : () => onSensorSelected!(sensor.id),
             ),
-        ],
-      ),
+          )
+          .toList(),
     );
   }
 }
@@ -64,87 +59,130 @@ class _SensorTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context).textTheme;
+    final statusLabel = _statusLabel(sensor.status);
+    final summary = _summaryText(sensor);
+    final recommendation = _recommendationText(sensor);
+    final lastReading = sensor.lastReading == null
+        ? 'Nenhuma leitura recente encontrada.'
+        : 'Ultima leitura: ${DateTimeFormatter.shortDateTime(sensor.lastReading)}';
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.only(bottom: 12),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(16),
           onTap: onTap,
           child: Ink(
-            padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: isSelected ? IzesColors.greenSoft : IzesColors.surfaceAlt,
-              borderRadius: BorderRadius.circular(14),
+              color: IzesColors.surface,
+              borderRadius: BorderRadius.circular(16),
               border: Border.all(
                 color: isSelected ? IzesColors.green : IzesColors.line,
               ),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            sensor.label.isEmpty ? 'Sensor' : sensor.label,
-                            style: theme.titleMedium?.copyWith(
-                              color: IzesColors.ink,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Wrap(
+                    spacing: 10,
+                    runSpacing: 10,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 230),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              sensor.label.isEmpty ? 'Sensor' : sensor.label,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: theme.titleMedium?.copyWith(
+                                color: IzesColors.ink,
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            sensor.location?.isNotEmpty == true
-                                ? sensor.location!
-                                : sensor.note,
-                            style: theme.bodyMedium?.copyWith(
-                              color: IzesColors.muted,
+                            const SizedBox(height: 4),
+                            Text(
+                              sensor.location?.isNotEmpty == true
+                                  ? sensor.location!
+                                  : sensor.note,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: theme.bodySmall?.copyWith(
+                                color: IzesColors.muted,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 10),
-                    StatusBadge(
-                      level: _badgeLevel(sensor.status),
-                      label: _statusLabel(sensor.status),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    _FactPill(
-                      label: 'Temperatura',
-                      value: _factValue(sensor, 'Temperatura'),
-                    ),
-                    _FactPill(
-                      label: 'Umidade',
-                      value: _factValue(sensor, 'Umidade'),
-                    ),
-                    _FactPill(label: 'pH', value: _factValue(sensor, 'pH')),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                Text(
-                  sensor.note,
-                  style: theme.labelMedium?.copyWith(color: IzesColors.muted),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  sensor.lastReading == null
-                      ? 'Nenhuma leitura recente encontrada.'
-                      : 'Leitura de ${DateTimeFormatter.shortDateTime(sensor.lastReading)}',
-                  style: theme.labelMedium?.copyWith(color: IzesColors.muted),
-                ),
-              ],
+                      StatusBadge(
+                        level: _badgeLevel(sensor.status),
+                        label: statusLabel,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
+                  Text(
+                    summary,
+                    style: theme.titleMedium?.copyWith(color: IzesColors.ink),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    recommendation,
+                    style: theme.bodyMedium?.copyWith(color: IzesColors.muted),
+                  ),
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      _FactPill(
+                        label: 'Temperatura',
+                        value: _factValue(sensor, 'Temperatura'),
+                      ),
+                      _FactPill(
+                        label: 'Umidade do solo',
+                        value: _factValue(sensor, 'Umidade'),
+                      ),
+                      _FactPill(label: 'pH', value: _factValue(sensor, 'pH')),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      Text(
+                        lastReading,
+                        style: theme.labelMedium?.copyWith(
+                          color: IzesColors.muted,
+                        ),
+                      ),
+                      if (isSelected)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: IzesColors.greenSoft,
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          child: Text(
+                            'Base do clima acima',
+                            style: theme.labelMedium?.copyWith(
+                              color: IzesColors.greenDark,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -182,6 +220,28 @@ class _SensorTile extends StatelessWidget {
     }
     return '--';
   }
+
+  String _summaryText(SensorModel sensor) {
+    switch (sensor.status) {
+      case SensorStatus.online:
+        return 'Leitura recente recebida e sensor estavel.';
+      case SensorStatus.attention:
+        return 'Este sensor exige acompanhamento agora.';
+      case SensorStatus.offline:
+        return 'Sem leitura recente para apoiar a decisao.';
+    }
+  }
+
+  String _recommendationText(SensorModel sensor) {
+    switch (sensor.status) {
+      case SensorStatus.online:
+        return 'Continue monitorando as proximas atualizacoes ao longo do dia.';
+      case SensorStatus.attention:
+        return 'Revise as leituras mais recentes e confirme se o manejo precisa de ajuste.';
+      case SensorStatus.offline:
+        return 'Verifique conexao, energia ou envio de leitura deste sensor.';
+    }
+  }
 }
 
 class _FactPill extends StatelessWidget {
@@ -195,14 +255,16 @@ class _FactPill extends StatelessWidget {
     final theme = Theme.of(context).textTheme;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
       decoration: BoxDecoration(
-        color: IzesColors.surface,
-        borderRadius: BorderRadius.circular(12),
+        color: IzesColors.surfaceSoft,
+        borderRadius: BorderRadius.circular(999),
         border: Border.all(color: IzesColors.line),
       ),
       child: Text(
         '$label: $value',
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
         style: theme.labelMedium?.copyWith(color: IzesColors.ink),
       ),
     );

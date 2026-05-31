@@ -20,20 +20,36 @@ class AlertItem {
     required this.title,
     required this.detail,
     this.label,
+    this.sensorName,
+    this.location,
+    this.temperature,
+    this.humidity,
+    this.ph,
   });
 
   final AlertLevel level;
   final String title;
   final String detail;
   final String? label;
+  final String? sensorName;
+  final String? location;
+  final String? temperature;
+  final String? humidity;
+  final String? ph;
 
   factory AlertItem.fromDashboardSensor(Map<String, dynamic> sensor) {
     final reading = sensor['ultima_leitura'] as Map<String, dynamic>? ?? const {};
     final critical = reading['nivel_critico'] == true;
     final active = reading['alerta_ativo'] == true;
     final title = '${sensor['nome'] ?? sensor['sensor_id'] ?? 'Sensor'}';
-    final local =
-        '${sensor['propriedade'] ?? sensor['municipio'] ?? 'area monitorada'}';
+    final property = '${sensor['propriedade'] ?? ''}'.trim();
+    final city = '${sensor['municipio'] ?? ''}'.trim();
+    final state = '${sensor['estado'] ?? ''}'.trim();
+    final local = [
+      if (property.isNotEmpty) property,
+      if (city.isNotEmpty || state.isNotEmpty)
+        [city, state].where((value) => value.isNotEmpty).join('/'),
+    ].join(' • ');
     final values = <String>[
       if (reading['temperatura'] != null) 'Temp. ${reading['temperatura']} C',
       if (reading['umidade'] != null) 'Umidade ${reading['umidade']}%',
@@ -55,6 +71,13 @@ class AlertItem {
           : active
           ? 'Atencao'
           : 'Estavel',
+      sensorName: title,
+      location: local.isEmpty ? 'Area monitorada' : local,
+      temperature: reading['temperatura'] == null
+          ? null
+          : '${reading['temperatura']} C',
+      humidity: reading['umidade'] == null ? null : '${reading['umidade']}%',
+      ph: reading['ph'] == null ? null : '${reading['ph']}',
     );
   }
 
@@ -73,6 +96,8 @@ class AlertItem {
       detail:
           '${json['acao_descricao'] ?? json['mensagem_ia'] ?? 'Acompanhe a area e confira a proxima leitura.'}',
       label: '${json['severidade'] ?? 'baixo'}',
+      sensorName: '${json['sensor_id'] ?? parametro}',
+      location: local,
     );
   }
 }

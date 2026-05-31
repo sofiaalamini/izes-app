@@ -45,16 +45,19 @@ class StatusBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
       decoration: BoxDecoration(
         color: _background,
         borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: _foreground.withValues(alpha: 0.10)),
       ),
       child: Text(
         label ?? _text,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
         style: Theme.of(
           context,
-        ).textTheme.labelMedium?.copyWith(color: _foreground, fontSize: 11),
+        ).textTheme.labelMedium?.copyWith(color: _foreground, fontSize: 10.5),
       ),
     );
   }

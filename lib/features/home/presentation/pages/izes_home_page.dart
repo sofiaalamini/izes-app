@@ -81,6 +81,28 @@ class _IzesHomePageState extends State<IzesHomePage> {
           ],
         ),
         actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 4),
+            child: Center(
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: IzesColors.surfaceSoft,
+                  borderRadius: BorderRadius.circular(999),
+                  border: Border.all(color: IzesColors.line),
+                ),
+                child: Text(
+                  userLabel.split(' ').first,
+                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                    color: IzesColors.greenDark,
+                  ),
+                ),
+              ),
+            ),
+          ),
           IconButton(
             tooltip: 'Sair',
             onPressed: _authService.logout,
@@ -129,19 +151,25 @@ class _IzesHomePageState extends State<IzesHomePage> {
         ),
       ),
       body: _pageForSection(_section),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _primarySections.indexOf(_section),
-        onDestinationSelected: (index) {
-          setState(() => _section = _primarySections[index]);
-        },
-        destinations: _primarySections
-            .map(
-              (item) => NavigationDestination(
-                icon: Icon(item.icon),
-                label: item.label,
-              ),
-            )
-            .toList(),
+      bottomNavigationBar: DecoratedBox(
+        decoration: const BoxDecoration(
+          color: IzesColors.surface,
+          border: Border(top: BorderSide(color: IzesColors.line)),
+        ),
+        child: NavigationBar(
+          selectedIndex: _primarySections.indexOf(_section),
+          onDestinationSelected: (index) {
+            setState(() => _section = _primarySections[index]);
+          },
+          destinations: _primarySections
+              .map(
+                (item) => NavigationDestination(
+                  icon: Icon(item.icon, size: 20),
+                  label: item.label,
+                ),
+              )
+              .toList(),
+        ),
       ),
     );
   }

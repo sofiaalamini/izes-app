@@ -8,7 +8,7 @@ class AiAssistantService {
 
   final ApiClient _apiClient;
 
-  Future<String> answerQuestion(String question) async {
+  Future<String> answerQuestion(String question, {String? sensorId}) async {
     final clientId = AuthService().resolvedClientId;
     if (clientId.isEmpty) {
       throw const AiAssistantException(
@@ -21,33 +21,46 @@ class AiAssistantService {
       );
     }
 
-    final data = await _apiClient.postJson(
-      '/api/ia/chat',
-      useAppToken: true,
-      queryParameters: {
+    try {
+      final queryParameters = <String, String>{
         'cliente_id': clientId,
         'pergunta': question.trim(),
-      },
-    );
+      };
+      if (sensorId != null && sensorId.trim().isNotEmpty) {
+        queryParameters['sensor_id'] = sensorId.trim();
+      }
 
-    final reply = <String>[
-      '${data['resposta_texto'] ?? ''}'.trim(),
-      if (data['recomendacao'] is Map<String, dynamic>)
-        'Acao: ${((data['recomendacao'] as Map<String, dynamic>)['acao'] ?? '').toString().trim()}',
-      if (data['atencoes'] is List && (data['atencoes'] as List).isNotEmpty)
-        'Atencoes: ${(data['atencoes'] as List).join(', ')}',
-      if (data['proximos_passos'] is List &&
-          (data['proximos_passos'] as List).isNotEmpty)
-        'Proximos passos: ${(data['proximos_passos'] as List).join(', ')}',
-    ].where((item) => item.isNotEmpty).join('\n\n');
+      final data = await _apiClient.postJson(
+        '/api/ia/chat',
+        useAppToken: true,
+        queryParameters: queryParameters,
+      );
 
-    if (reply.isEmpty) {
+      final reply = '${data['resposta_texto'] ?? ''}'.trim();
+      if (reply.isNotEmpty) {
+        return reply;
+      }
+
+      final fallbackReply = '${data['resposta'] ?? ''}'.trim();
+      if (fallbackReply.isNotEmpty) {
+        return fallbackReply;
+      }
+
+      return 'Nao consegui gerar uma resposta agora.';
+    } on ApiException catch (error) {
+      if (error.message.contains('HTTP 401')) {
+        throw const AiAssistantException(
+          'Sua sessao expirou ou o token do app esta invalido.',
+        );
+      }
       throw const AiAssistantException(
-        'Backend nao retornou uma resposta valida da IA.',
+        'Nao foi possivel consultar a IA agora.',
+      );
+    } catch (_) {
+      throw const AiAssistantException(
+        'Nao foi possivel consultar a IA agora.',
       );
     }
-
-    return reply;
   }
 }
 

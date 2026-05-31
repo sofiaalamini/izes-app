@@ -17,87 +17,80 @@ class WeatherCard extends StatelessWidget {
         ? weather.city
         : '${weather.city}, ${weather.region}';
     final updatedAt = DateTimeFormatter.shortDateTime(weather.fetchedAt);
+    final message = weather.agriculturalRecommendation.isEmpty
+        ? 'Sem recomendacao adicional no momento.'
+        : weather.agriculturalRecommendation;
 
     return AppSurfaceCard(
       borderRadius: 16,
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(18),
       backgroundColor: IzesColors.surface,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          Text(
+            subtitle,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: theme.titleLarge,
+          ),
+          const SizedBox(height: 18),
+          Wrap(
+            spacing: 16,
+            runSpacing: 8,
+            crossAxisAlignment: WrapCrossAlignment.end,
             children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Clima atual', style: theme.titleLarge),
-                    const SizedBox(height: 4),
-                    Text(subtitle, style: theme.bodyMedium),
-                  ],
+              Text(
+                '${weather.temperatureC.toStringAsFixed(1)}°C',
+                style: theme.headlineMedium?.copyWith(
+                  color: IzesColors.greenDark,
+                  fontSize: 34,
                 ),
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                decoration: BoxDecoration(
-                  color: IzesColors.greenSoft,
-                  borderRadius: BorderRadius.circular(14),
-                ),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 4),
                 child: Text(
-                  '${weather.temperatureC.toStringAsFixed(1)} C',
-                  style: theme.titleLarge?.copyWith(color: IzesColors.green),
+                  weather.condition,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.titleMedium?.copyWith(color: IzesColors.ink),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 6),
-          Text(
-            weather.condition,
-            style: theme.bodyLarge?.copyWith(color: IzesColors.ink),
-          ),
-          const SizedBox(height: 14),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
+          const SizedBox(height: 18),
+          Row(
             children: [
-              _WeatherFact(
-                label: 'Sensacao',
-                value: '${weather.feelsLikeC.toStringAsFixed(1)} C',
+              Expanded(
+                child: _WeatherFact(
+                  label: 'Umidade',
+                  value: '${weather.humidity}%',
+                ),
               ),
-              _WeatherFact(label: 'Umidade', value: '${weather.humidity}%'),
-              _WeatherFact(
-                label: 'Chuva',
-                value:
-                    '${weather.chanceOfRain}% / ${weather.precipitationMm.toStringAsFixed(1)} mm',
-              ),
-              _WeatherFact(
-                label: 'Vento',
-                value: '${weather.windKph.toStringAsFixed(1)} km/h',
+              const SizedBox(width: 10),
+              Expanded(
+                child: _WeatherFact(
+                  label: 'Vento',
+                  value: '${weather.windKph.toStringAsFixed(1)} km/h',
+                ),
               ),
             ],
           ),
           const SizedBox(height: 16),
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
               color: IzesColors.surfaceAlt,
               borderRadius: BorderRadius.circular(14),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Recomendacao agricola', style: theme.titleMedium),
-                const SizedBox(height: 6),
-                Text(
-                  weather.agriculturalRecommendation,
-                  style: theme.bodyMedium,
-                ),
-              ],
+            child: Text(
+              message,
+              style: theme.bodyLarge?.copyWith(color: IzesColors.ink),
             ),
           ),
           const SizedBox(height: 10),
-          Text('Atualizado em $updatedAt', style: theme.bodyMedium),
+          Text('Atualizado em $updatedAt', style: theme.bodySmall),
         ],
       ),
     );
@@ -112,21 +105,26 @@ class _WeatherFact extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final width = (MediaQuery.sizeOf(context).width - 56) / 2;
     return Container(
-      width: width.clamp(110.0, 180.0).toDouble(),
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       decoration: BoxDecoration(
-        color: IzesColors.greenSoft,
-        borderRadius: BorderRadius.circular(14),
+        color: IzesColors.surfaceSoft,
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(color: IzesColors.line),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(label, style: Theme.of(context).textTheme.labelMedium),
-          const SizedBox(height: 8),
-          Text(value, style: Theme.of(context).textTheme.titleMedium),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(color: IzesColors.ink),
+          ),
         ],
       ),
     );
