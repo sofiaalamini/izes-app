@@ -79,7 +79,8 @@ class ApiClient {
     }
 
     if (authenticated) {
-      headers['Authorization'] = 'Bearer ${await _authService.getAccessToken()}';
+      headers['Authorization'] =
+          'Bearer ${await _authService.getAccessToken()}';
     }
 
     if (authenticated) {
@@ -94,7 +95,7 @@ class ApiClient {
     if (data is Map<String, dynamic>) {
       return data;
     }
-    throw const ApiException('Resposta inesperada do backend.');
+    throw const ApiException('Nao foi possivel carregar os dados agora.');
   }
 
   List<dynamic> _decodeList(http.Response response) {
@@ -102,16 +103,14 @@ class ApiClient {
     if (data is List<dynamic>) {
       return data;
     }
-    throw const ApiException('Resposta inesperada do backend.');
+    throw const ApiException('Nao foi possivel carregar os dados agora.');
   }
 
   dynamic _decode(http.Response response) {
     if (response.statusCode < 200 || response.statusCode >= 300) {
       final body = response.body.trim();
       throw ApiException(
-        body.isEmpty
-            ? 'Erro de API (${response.statusCode}).'
-            : 'Erro de API (${response.statusCode}): $body',
+        'HTTP ${response.statusCode}: ${body.isEmpty ? 'Nao foi possivel concluir sua solicitacao.' : body}',
       );
     }
 

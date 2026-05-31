@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/config/backend_config.dart';
+import '../../../../core/services/auth_service.dart';
 import '../../../../core/theme/izes_theme.dart';
 import '../../../ai_assistant/presentation/pages/ai_assistant_page.dart';
 import '../../../alerts/presentation/pages/alerts_page.dart';
@@ -27,6 +27,7 @@ class IzesHomePage extends StatefulWidget {
 }
 
 class _IzesHomePageState extends State<IzesHomePage> {
+  final AuthService _authService = AuthService();
   HomeSection _section = HomeSection.dashboard;
 
   static const _primarySections = [
@@ -49,11 +50,23 @@ class _IzesHomePageState extends State<IzesHomePage> {
     }
   }
 
+  String _subtitleForSection(HomeSection section) {
+    switch (section) {
+      case HomeSection.dashboard:
+        return 'Resumo do dia';
+      case HomeSection.alerts:
+        return 'Prioridades do campo';
+      case HomeSection.monitoring:
+        return 'Clima e sensores';
+      case HomeSection.ai:
+        return 'Orientacao rapida';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final clientLabel = BackendConfig.hasClientId
-        ? BackendConfig.clientId
-        : 'cliente nao configurado';
+    final user = _authService.currentUser;
+    final userLabel = user?.nome.isNotEmpty == true ? user!.nome : 'IZES';
 
     return Scaffold(
       appBar: AppBar(
@@ -61,22 +74,17 @@ class _IzesHomePageState extends State<IzesHomePage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text('IZES', style: Theme.of(context).textTheme.titleLarge),
-            Text(clientLabel, style: Theme.of(context).textTheme.bodyMedium),
+            Text(
+              _subtitleForSection(_section),
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
           ],
         ),
         actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 12),
-            child: Chip(
-              avatar: const Icon(
-                Icons.eco_outlined,
-                size: 16,
-                color: IzesColors.green,
-              ),
-              label: Text(
-                BackendConfig.hasAppToken ? 'app token ativo' : 'sem app token',
-              ),
-            ),
+          IconButton(
+            tooltip: 'Sair',
+            onPressed: _authService.logout,
+            icon: const Icon(Icons.logout_rounded),
           ),
         ],
       ),
@@ -87,10 +95,14 @@ class _IzesHomePageState extends State<IzesHomePage> {
             children: [
               ListTile(
                 title: Text(
-                  'Cliente',
+                  userLabel,
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
-                subtitle: Text(clientLabel),
+                subtitle: Text(user?.email ?? ''),
+                trailing: TextButton(
+                  onPressed: _authService.logout,
+                  child: const Text('Sair'),
+                ),
               ),
               const Divider(),
               ...HomeSection.values.map(

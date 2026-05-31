@@ -1,6 +1,7 @@
-import '../config/backend_config.dart';
 import '../models/sensor_model.dart';
+import '../utils/date_time_formatter.dart';
 import 'api_client.dart';
+import 'auth_service.dart';
 
 class SensorService {
   SensorService({ApiClient? apiClient}) : _apiClient = apiClient ?? ApiClient();
@@ -8,14 +9,15 @@ class SensorService {
   final ApiClient _apiClient;
 
   Future<List<SensorModel>> fetchSensors() async {
-    if (!BackendConfig.hasClientId) {
+    final clientId = AuthService().resolvedClientId;
+    if (clientId.isEmpty) {
       throw const SensorServiceException(
-        'API_CLIENT_ID nao configurado no .env.',
+        'Cliente nao configurado para carregar sensores.',
       );
     }
 
     final data = await _apiClient.getJson(
-      '/api/dashboard/cliente/${BackendConfig.clientId}/sensores',
+      '/api/dashboard/cliente/$clientId/sensores',
       useAppToken: true,
     );
     final sensors = (data['sensores'] as List<dynamic>? ?? const [])
@@ -75,7 +77,7 @@ class SensorService {
   }
 
   DateTime? _parseDateTime(dynamic value) {
-    return DateTime.tryParse('$value');
+    return DateTimeFormatter.parse(value);
   }
 
   double? _asDouble(dynamic value) {

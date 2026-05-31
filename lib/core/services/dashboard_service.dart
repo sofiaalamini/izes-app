@@ -1,7 +1,8 @@
-import '../config/backend_config.dart';
 import '../models/izes_models.dart';
+import '../utils/date_time_formatter.dart';
 import 'alerts_service.dart';
 import 'api_client.dart';
+import 'auth_service.dart';
 
 class DashboardData {
   const DashboardData({
@@ -24,14 +25,15 @@ class DashboardService {
   final AlertsService _alertsService;
 
   Future<DashboardData> fetchDashboard() async {
-    if (!BackendConfig.hasClientId) {
+    final clientId = AuthService().resolvedClientId;
+    if (clientId.isEmpty) {
       throw const ApiDashboardException(
-        'API_CLIENT_ID nao configurado no .env.',
+        'Cliente nao configurado para carregar o dashboard.',
       );
     }
 
     final sensorsData = await _apiClient.getJson(
-      '/api/dashboard/cliente/${BackendConfig.clientId}/sensores',
+      '/api/dashboard/cliente/$clientId/sensores',
       useAppToken: true,
     );
     List<AlertItem> alerts;
@@ -59,7 +61,7 @@ class DashboardService {
         sensorCount: sensors.length,
       ),
       alerts: alerts.take(3).toList(),
-      updatedAtLabel: '${sensorsData['atualizado_em'] ?? 'sem sincronizacao'}',
+      updatedAtLabel: DateTimeFormatter.shortDateTime(sensorsData['atualizado_em']),
     );
   }
 }

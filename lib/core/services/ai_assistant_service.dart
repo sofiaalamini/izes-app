@@ -1,5 +1,6 @@
 import '../config/backend_config.dart';
 import 'api_client.dart';
+import 'auth_service.dart';
 
 class AiAssistantService {
   AiAssistantService({ApiClient? apiClient})
@@ -8,9 +9,10 @@ class AiAssistantService {
   final ApiClient _apiClient;
 
   Future<String> answerQuestion(String question) async {
-    if (!BackendConfig.hasClientId) {
+    final clientId = AuthService().resolvedClientId;
+    if (clientId.isEmpty) {
       throw const AiAssistantException(
-        'API_CLIENT_ID nao configurado no .env.',
+        'Cliente nao configurado para usar o assistente.',
       );
     }
     if (!BackendConfig.hasAppToken) {
@@ -23,7 +25,7 @@ class AiAssistantService {
       '/api/ia/chat',
       useAppToken: true,
       queryParameters: {
-        'cliente_id': BackendConfig.clientId,
+        'cliente_id': clientId,
         'pergunta': question.trim(),
       },
     );

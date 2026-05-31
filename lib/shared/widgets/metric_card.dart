@@ -22,20 +22,21 @@ class MetricCard extends StatelessWidget {
     final theme = Theme.of(context).textTheme;
 
     return AppSurfaceCard(
+      padding: const EdgeInsets.all(14),
       backgroundColor: tint ?? IzesColors.surface,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label.toUpperCase(), style: theme.labelMedium),
-          const SizedBox(height: 12),
+          Text(label, style: theme.labelMedium),
+          const SizedBox(height: 10),
           Text(
             value,
             style: theme.headlineMedium?.copyWith(
-              fontSize: 28,
+              fontSize: 24,
               fontWeight: FontWeight.w700,
             ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 8),
           Text(note, style: theme.bodyMedium),
         ],
       ),

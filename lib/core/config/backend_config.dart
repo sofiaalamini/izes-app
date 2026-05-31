@@ -1,10 +1,23 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class BackendConfig {
+  static const _railwayBaseUrl =
+      'https://teste-railway-izes-agro-production.up.railway.app';
+
   static String get baseUrl {
     final raw = dotenv.env['API_BASE_URL']?.trim();
     if (raw == null || raw.isEmpty) {
-      return 'http://10.0.2.2:8000';
+      if (kIsWeb) {
+        return _railwayBaseUrl;
+      }
+
+      switch (defaultTargetPlatform) {
+        case TargetPlatform.android:
+          return _railwayBaseUrl;
+        default:
+          return _railwayBaseUrl;
+      }
     }
     return raw.endsWith('/') ? raw.substring(0, raw.length - 1) : raw;
   }

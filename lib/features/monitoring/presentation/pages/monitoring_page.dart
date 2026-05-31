@@ -5,7 +5,6 @@ import '../../../../core/models/weather_model.dart';
 import '../../../../core/services/sensor_service.dart';
 import '../../../../core/services/weather_service.dart';
 import '../../../../core/theme/izes_theme.dart';
-import '../../../../shared/widgets/app_surface_card.dart';
 import '../../../../shared/widgets/section_header.dart';
 import '../widgets/property_sensors_card.dart';
 import '../widgets/weather_card.dart';
@@ -23,6 +22,8 @@ class _MonitoringPageState extends State<MonitoringPage> {
 
   late Future<WeatherModel> _weatherFuture;
   late Future<List<SensorModel>> _sensorsFuture;
+  String? _selectedSensorId;
+  List<SensorModel> _currentSensors = const <SensorModel>[];
 
   @override
   void initState() {
@@ -31,13 +32,53 @@ class _MonitoringPageState extends State<MonitoringPage> {
   }
 
   void _loadData() {
-    _weatherFuture = _weatherService.fetchCurrentWeather();
-    _sensorsFuture = _sensorService.fetchSensors();
+    _sensorsFuture = _sensorService.fetchSensors().then((sensors) {
+      _currentSensors = sensors;
+      if (sensors.isEmpty) {
+        _selectedSensorId = null;
+      } else if (_selectedSensorId == null ||
+          !sensors.any((sensor) => sensor.id == _selectedSensorId)) {
+        _selectedSensorId = sensors.first.id;
+      }
+      return sensors;
+    });
+
+    _weatherFuture = _sensorsFuture.then((sensors) {
+      if (sensors.isEmpty) {
+        throw const WeatherException(
+          'Nenhum sensor disponivel para consultar o clima.',
+        );
+      }
+
+      final selectedSensor =
+          sensors.any((sensor) => sensor.id == _selectedSensorId)
+          ? sensors.firstWhere((sensor) => sensor.id == _selectedSensorId)
+          : sensors.first;
+      _selectedSensorId = selectedSensor.id;
+      return _weatherService.getWeatherBySensor(selectedSensor.id);
+    });
   }
 
   Future<void> _refresh() async {
     setState(_loadData);
     await Future.wait<dynamic>([_weatherFuture, _sensorsFuture]);
+  }
+
+  void _selectSensor(String sensorId) {
+    if (_selectedSensorId == sensorId) {
+      return;
+    }
+    setState(() {
+      _selectedSensorId = sensorId;
+      _weatherFuture = _weatherService.getWeatherBySensor(sensorId);
+    });
+  }
+
+  String _weatherErrorMessage(Object? error) {
+    if (error is WeatherException) {
+      return error.message;
+    }
+    return 'O clima nao esta disponivel agora.';
   }
 
   @override
@@ -49,30 +90,42 @@ class _MonitoringPageState extends State<MonitoringPage> {
         padding: const EdgeInsets.all(16),
         children: [
           const SectionHeader(
-            eyebrow: 'Monitoramento ambiental',
-            title: 'Clima e sensores com leitura pronta para decisao.',
+            eyebrow: 'Clima e sensores',
+            title: 'Leitura rapida do ambiente',
             description:
-                'Acompanhe o clima em tempo real e o status operacional da propriedade.',
+                'Clima do sensor selecionado e status mais recente dos sensores.',
+            compact: true,
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 14),
           FutureBuilder<WeatherModel>(
             future: _weatherFuture,
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return const _StateCard(
-                  title: 'Clima em tempo real',
-                  message: 'Buscando clima atual no backend...',
+                  title: 'Clima atual',
+                  message: 'Atualizando informacoes do sensor...',
                   loading: true,
                 );
               }
 
               if (snapshot.hasError) {
                 return _StateCard(
-                  title: 'Clima em tempo real',
-                  message: '${snapshot.error}',
+                  title: 'Clima atual',
+                  message: _weatherErrorMessage(snapshot.error),
                   actionLabel: 'Tentar novamente',
                   onAction: () => setState(() {
-                    _weatherFuture = _weatherService.fetchCurrentWeather();
+                    final sensorId = _selectedSensorId;
+                    if (sensorId == null) {
+                      _weatherFuture = Future<WeatherModel>.error(
+                        const WeatherException(
+                          'Nenhum sensor disponivel para consultar o clima.',
+                        ),
+                      );
+                    } else {
+                      _weatherFuture = _weatherService.getWeatherBySensor(
+                        sensorId,
+                      );
+                    }
                   }),
                 );
               }
@@ -80,8 +133,8 @@ class _MonitoringPageState extends State<MonitoringPage> {
               final weather = snapshot.data;
               if (weather == null) {
                 return const _StateCard(
-                  title: 'Clima em tempo real',
-                  message: 'Nenhum dado de clima disponivel no momento.',
+                  title: 'Clima atual',
+                  message: 'Sem atualizacao de clima no momento.',
                 );
               }
 
@@ -95,7 +148,7 @@ class _MonitoringPageState extends State<MonitoringPage> {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return const _StateCard(
                   title: 'Sensores da propriedade',
-                  message: 'Carregando leituras reais dos sensores...',
+                  message: 'Buscando as leituras mais recentes...',
                   loading: true,
                 );
               }
@@ -105,21 +158,23 @@ class _MonitoringPageState extends State<MonitoringPage> {
                   title: 'Sensores da propriedade',
                   message: 'Falha ao carregar sensores.',
                   actionLabel: 'Recarregar',
-                  onAction: () => setState(() {
-                    _sensorsFuture = _sensorService.fetchSensors();
-                  }),
+                  onAction: () => setState(_loadData),
                 );
               }
 
-              final sensors = snapshot.data ?? const <SensorModel>[];
+              final sensors = snapshot.data ?? _currentSensors;
               if (sensors.isEmpty) {
                 return const _StateCard(
                   title: 'Sensores da propriedade',
-                  message: 'Nenhuma leitura disponivel no momento.',
+                  message: 'Nenhum sensor disponivel no momento.',
                 );
               }
 
-              return PropertySensorsCard(sensors: sensors);
+              return PropertySensorsCard(
+                sensors: sensors,
+                selectedSensorId: _selectedSensorId,
+                onSensorSelected: _selectSensor,
+              );
             },
           ),
         ],
@@ -145,19 +200,20 @@ class _StateCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AppSurfaceCard(
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(title, style: Theme.of(context).textTheme.titleLarge),
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
           if (loading) ...[
             const SizedBox(
-              height: 22,
-              width: 22,
+              height: 18,
+              width: 18,
               child: CircularProgressIndicator(strokeWidth: 2.4),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 10),
           ],
           Text(message, style: Theme.of(context).textTheme.bodyMedium),
           if (actionLabel != null && onAction != null) ...[

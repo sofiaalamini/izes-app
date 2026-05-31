@@ -45,7 +45,12 @@ class _AiAssistantPageState extends State<AiAssistantPage> {
     } catch (error) {
       if (!mounted) return;
       setState(() {
-        _messages.add(ChatMessage(text: '$error', isUser: false));
+        _messages.add(
+          const ChatMessage(
+            text: 'Nao consegui responder agora. Tente novamente em instantes.',
+            isUser: false,
+          ),
+        );
         _loading = false;
       });
     }
@@ -74,11 +79,11 @@ class _AiAssistantPageState extends State<AiAssistantPage> {
             children: [
               const SectionHeader(
                 eyebrow: 'Assistente IZES',
-                title:
-                    'Pergunte em linguagem simples e receba resposta pratica.',
-                description: 'Integrado ao endpoint /api/ia/chat do backend.',
+                title: 'Pergunte direto',
+                description: 'Respostas curtas para apoiar a decisao no campo.',
+                compact: true,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
               Wrap(
                 spacing: 8,
                 runSpacing: 8,
@@ -91,20 +96,25 @@ class _AiAssistantPageState extends State<AiAssistantPage> {
                     )
                     .toList(),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 14),
               ..._messages.map(
                 (message) => Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
+                  padding: const EdgeInsets.only(bottom: 10),
                   child: Align(
                     alignment: message.isUser
                         ? Alignment.centerRight
                         : Alignment.centerLeft,
                     child: ConstrainedBox(
                       constraints: const BoxConstraints(maxWidth: 320),
-                      child: AppSurfaceCard(
-                        backgroundColor: message.isUser
-                            ? IzesColors.greenSoft
-                            : IzesColors.surface,
+                      child: Container(
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: message.isUser
+                              ? IzesColors.greenSoft
+                              : IzesColors.surface,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: IzesColors.line),
+                        ),
                         child: Text(
                           message.text,
                           style: Theme.of(context).textTheme.bodyLarge
@@ -116,11 +126,25 @@ class _AiAssistantPageState extends State<AiAssistantPage> {
                 ),
               ),
               if (_loading)
-                const Padding(
+                Padding(
                   padding: EdgeInsets.only(top: 4),
                   child: Align(
                     alignment: Alignment.centerLeft,
-                    child: CircularProgressIndicator(strokeWidth: 2),
+                    child: AppSurfaceCard(
+                      backgroundColor: IzesColors.surfaceAlt,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          SizedBox(
+                            height: 16,
+                            width: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                          SizedBox(width: 10),
+                          Text('Preparando resposta...'),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
             ],
@@ -136,7 +160,7 @@ class _AiAssistantPageState extends State<AiAssistantPage> {
                   child: TextField(
                     controller: _controller,
                     decoration: const InputDecoration(
-                      hintText: 'Ex.: Devo irrigar hoje?',
+                      hintText: 'Escreva sua pergunta',
                     ),
                     onSubmitted: _sendQuestion,
                   ),
@@ -146,7 +170,7 @@ class _AiAssistantPageState extends State<AiAssistantPage> {
                   onPressed: _loading
                       ? null
                       : () => _sendQuestion(_controller.text),
-                  child: const Icon(Icons.arrow_upward_rounded),
+                  child: const Icon(Icons.arrow_upward_rounded, size: 18),
                 ),
               ],
             ),

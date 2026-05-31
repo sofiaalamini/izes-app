@@ -51,12 +51,12 @@ class IzesTheme {
           color: IzesColors.ink,
         ),
         titleLarge: TextStyle(
-          fontSize: 18,
+          fontSize: 19,
           fontWeight: FontWeight.w700,
           color: IzesColors.ink,
         ),
         titleMedium: TextStyle(
-          fontSize: 16,
+          fontSize: 15,
           fontWeight: FontWeight.w600,
           color: IzesColors.ink,
         ),
@@ -82,24 +82,69 @@ class IzesTheme {
         elevation: 0,
         scrolledUnderElevation: 0,
         centerTitle: false,
+        toolbarHeight: 64,
       ),
       cardTheme: CardThemeData(
         color: IzesColors.surface,
         elevation: 0,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(18),
           side: const BorderSide(color: IzesColors.line),
+        ),
+      ),
+      filledButtonTheme: FilledButtonThemeData(
+        style: FilledButton.styleFrom(
+          backgroundColor: IzesColors.green,
+          foregroundColor: scheme.onPrimary,
+          elevation: 0,
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+          textStyle: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: IzesColors.ink,
+          side: const BorderSide(color: IzesColors.line),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+          textStyle: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          foregroundColor: IzesColors.green,
+          textStyle: const TextStyle(fontWeight: FontWeight.w600),
         ),
       ),
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: IzesColors.surface,
-        indicatorColor: IzesColors.greenSoft,
+        height: 64,
+        indicatorColor: const Color(0x00000000),
         labelTextStyle: WidgetStateProperty.resolveWith(
           (states) => TextStyle(
-            fontSize: 12,
+            fontSize: 11,
             fontWeight: states.contains(WidgetState.selected)
                 ? FontWeight.w700
                 : FontWeight.w600,
+            color: states.contains(WidgetState.selected)
+                ? IzesColors.green
+                : IzesColors.muted,
+          ),
+        ),
+        iconTheme: WidgetStateProperty.resolveWith(
+          (states) => IconThemeData(
+            size: 20,
             color: states.contains(WidgetState.selected)
                 ? IzesColors.green
                 : IzesColors.muted,
@@ -119,15 +164,15 @@ class IzesTheme {
         filled: true,
         fillColor: IzesColors.surface,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(16),
           borderSide: const BorderSide(color: IzesColors.line),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(16),
           borderSide: const BorderSide(color: IzesColors.line),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(16),
           borderSide: const BorderSide(color: IzesColors.green, width: 1.4),
         ),
         contentPadding: const EdgeInsets.symmetric(
