@@ -1,7 +1,9 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 
 import '../config/backend_config.dart';
 import 'auth_service.dart';
@@ -74,11 +76,39 @@ class ApiClient {
     Map<String, String>? fields,
     required String fileField,
     required String filePath,
+    required List<int> fileBytes,
+    String? fileName,
+    MediaType? fileContentType,
     bool useAppToken = false,
     bool authenticated = false,
     String? debugLabel,
   }) async {
     final uri = _buildUri(path, queryParameters);
+    final file = File(filePath);
+    final resolvedFileName = (fileName == null || fileName.trim().isEmpty)
+        ? _fallbackFileName(filePath)
+        : fileName.trim();
+    final resolvedContentType =
+        fileContentType ?? _inferImageContentType(resolvedFileName);
+
+    if (debugLabel != null && debugLabel.isNotEmpty) {
+      debugPrint('$debugLabel URL: $uri');
+      debugPrint('$debugLabel filePath: $filePath');
+      debugPrint('$debugLabel fileName: $resolvedFileName');
+      debugPrint('$debugLabel fileSizeBytes: ${fileBytes.length}');
+      debugPrint('$debugLabel fileContentType: $resolvedContentType');
+    }
+
+    final fileExists = await file.exists();
+    if (!fileExists && fileBytes.isEmpty) {
+      throw ApiException(
+        'Arquivo de imagem nao encontrado para upload: $filePath',
+      );
+    }
+    if (debugLabel != null && debugLabel.isNotEmpty) {
+      debugPrint('$debugLabel fileExistsOnDisk: $fileExists');
+    }
+
     final request = http.MultipartRequest('POST', uri);
     request.headers.addAll(
       await _buildHeaders(
@@ -89,9 +119,31 @@ class ApiClient {
     if (fields != null && fields.isNotEmpty) {
       request.fields.addAll(fields);
     }
-    request.files.add(await http.MultipartFile.fromPath(fileField, filePath));
+    request.files.add(
+      http.MultipartFile.fromBytes(
+        fileField,
+        fileBytes,
+        filename: resolvedFileName,
+        contentType: resolvedContentType,
+      ),
+    );
+
+    if (debugLabel != null && debugLabel.isNotEmpty) {
+      debugPrint('$debugLabel multipart field: $fileField');
+      debugPrint('$debugLabel multipart fields: ${request.fields}');
+      debugPrint(
+        '$debugLabel multipart headers before send: ${request.headers}',
+      );
+      final multipartFile = request.files.last;
+      debugPrint(
+        '$debugLabel multipart file prepared: filename=${multipartFile.filename}, length=${multipartFile.length}, contentType=${multipartFile.contentType}',
+      );
+    }
 
     final streamedResponse = await _client.send(request);
+    if (debugLabel != null && debugLabel.isNotEmpty) {
+      debugPrint('$debugLabel multipart headers sent: ${request.headers}');
+    }
     final response = await http.Response.fromStream(streamedResponse);
     _logResponse(debugLabel, uri, response);
     return _decodeMap(response);
@@ -161,6 +213,32 @@ class ApiClient {
     debugPrint('$debugLabel URL: $uri');
     debugPrint('$debugLabel statusCode: ${response.statusCode}');
     debugPrint('$debugLabel body: ${response.body}');
+  }
+
+  String _fallbackFileName(String filePath) {
+    final normalized = filePath.replaceAll('\\', '/');
+    final lastSegment = normalized.split('/').last.trim();
+    if (lastSegment.isNotEmpty) {
+      return lastSegment;
+    }
+    return 'upload.jpg';
+  }
+
+  MediaType _inferImageContentType(String fileName) {
+    final normalized = fileName.toLowerCase();
+    if (normalized.endsWith('.png')) {
+      return MediaType('image', 'png');
+    }
+    if (normalized.endsWith('.webp')) {
+      return MediaType('image', 'webp');
+    }
+    if (normalized.endsWith('.heic')) {
+      return MediaType('image', 'heic');
+    }
+    if (normalized.endsWith('.jpg') || normalized.endsWith('.jpeg')) {
+      return MediaType('image', 'jpeg');
+    }
+    return MediaType('image', 'jpeg');
   }
 }
 

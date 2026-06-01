@@ -7,7 +7,10 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   try {
     await dotenv.load(fileName: '.env');
-  } catch (_) {}
+  } catch (error, stackTrace) {
+    debugPrint('Falha ao carregar .env: $error');
+    debugPrintStack(stackTrace: stackTrace);
+  }
 
   runApp(const IzesApp());
 }

@@ -171,9 +171,14 @@ class _AiAssistantPageState extends State<AiAssistantPage> {
     });
 
     try {
+      debugPrint('Picked image path: ${image.path}');
+      debugPrint('Picked image filename: ${image.name}');
+      debugPrint('Picked image size bytes: ${imageBytes.length}');
       final sensorId = await _resolveSensorId();
       final reply = await _assistantService.analyzeImage(
         image.path,
+        imageBytes: imageBytes,
+        fileName: image.name,
         message: question,
         sensorId: sensorId,
       );
@@ -186,16 +191,23 @@ class _AiAssistantPageState extends State<AiAssistantPage> {
       debugPrint('AiAssistantPage image send error: $error');
       if (!mounted) return;
       setState(() {
-        _messages.add(ChatMessage(text: error.message, isUser: false));
+        _messages.add(
+          ChatMessage(
+            text:
+                'Erro ao analisar imagem. Verifique logs do console.\n${error.message}',
+            isUser: false,
+          ),
+        );
         _loading = false;
       });
-    } catch (_) {
-      debugPrint('AiAssistantPage image send unexpected error.');
+    } catch (error, stackTrace) {
+      debugPrint('AiAssistantPage image send unexpected error: $error');
+      debugPrintStack(stackTrace: stackTrace);
       if (!mounted) return;
       setState(() {
         _messages.add(
           const ChatMessage(
-            text: 'Nao foi possivel analisar a imagem agora.',
+            text: 'Erro ao analisar imagem. Verifique logs do console.',
             isUser: false,
           ),
         );

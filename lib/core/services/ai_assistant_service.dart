@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:http_parser/http_parser.dart';
 
 import '../config/backend_config.dart';
 import 'api_client.dart';
@@ -71,6 +72,8 @@ class AiAssistantService {
 
   Future<String> analyzeImage(
     String imagePath, {
+    List<int>? imageBytes,
+    String? fileName,
     String? message,
     String? sensorId,
   }) async {
@@ -97,6 +100,9 @@ class AiAssistantService {
       }
 
       debugPrint('IA multipart file field: imagem');
+      debugPrint('IA image path: $imagePath');
+      debugPrint('IA image filename: ${fileName ?? '(sem nome)'}');
+      debugPrint('IA image bytes: ${imageBytes?.length ?? 0}');
       if (trimmedMessage.isNotEmpty) {
         debugPrint('IA multipart text field: mensagem');
       }
@@ -107,16 +113,18 @@ class AiAssistantService {
         fields: fields,
         fileField: 'imagem',
         filePath: imagePath,
+        fileBytes: imageBytes ?? const <int>[],
+        fileName: fileName,
+        fileContentType: _resolveImageContentType(fileName),
         debugLabel: 'IA image',
       );
 
-      final reply = '${data['resposta'] ?? data['resposta_texto'] ?? ''}'
-          .trim();
+      final reply = '${data['resposta'] ?? ''}'.trim();
       if (reply.isNotEmpty) {
         return reply;
       }
 
-      return 'Nao consegui analisar a imagem agora.';
+      throw ApiException('Resposta do backend sem o campo "resposta": $data');
     } on ApiException catch (error) {
       debugPrint('IA image error: $error');
       if (error.message.contains('HTTP 401')) {
@@ -124,16 +132,20 @@ class AiAssistantService {
           'Sua sessao expirou ou o token do app esta invalido.',
         );
       }
-      throw const AiAssistantException(
-        'Nao foi possivel analisar a imagem agora.',
-      );
+      throw AiAssistantException(error.message);
     } catch (error, stackTrace) {
       debugPrint('IA image unexpected error: $error');
       debugPrintStack(stackTrace: stackTrace);
-      throw const AiAssistantException(
-        'Nao foi possivel analisar a imagem agora.',
-      );
+      throw AiAssistantException('Erro inesperado ao analisar imagem: $error');
     }
+  }
+
+  MediaType _resolveImageContentType(String? fileName) {
+    final normalized = (fileName ?? '').toLowerCase();
+    if (normalized.endsWith('.png')) {
+      return MediaType('image', 'png');
+    }
+    return MediaType('image', 'jpeg');
   }
 }
 

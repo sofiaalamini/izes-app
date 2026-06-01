@@ -9,14 +9,23 @@ class BackendConfig {
   static String get baseUrl {
     final raw = dotenv.env['API_BASE_URL']?.trim();
     if (raw == null || raw.isEmpty) {
+      debugPrint(
+        'API_BASE_URL ausente no .env. Usando fallback de backend para a plataforma atual.',
+      );
       if (kIsWeb) {
         return _railwayBaseUrl;
       }
 
       switch (defaultTargetPlatform) {
         case TargetPlatform.android:
+          debugPrint(
+            'BackendConfig fallback ativo no Android: http://10.0.2.2:8000',
+          );
           return _androidEmulatorBaseUrl;
         default:
+          debugPrint(
+            'BackendConfig fallback ativo fora do Android: $_railwayBaseUrl',
+          );
           return _railwayBaseUrl;
       }
     }
