@@ -8,15 +8,17 @@ class IzesColors {
   static const ink = Color(0xFF1E261C);
   static const muted = Color(0xFF64705E);
   static const line = Color(0xFFDCD4C5);
-  static const green = Color(0xFF2E6840);
+  static const green = Color(0xFF166534);
   static const greenDark = Color(0xFF214E30);
-  static const greenSoft = Color(0xFFD8E7D8);
+  static const greenSoft = Color(0xFFDCFCE7);
   static const earth = Color(0xFF8A5D41);
   static const earthSoft = Color(0xFFF2E4D6);
-  static const urgent = Color(0xFF94483B);
-  static const urgentSoft = Color(0xFFF4DED7);
-  static const attention = Color(0xFF8B7130);
-  static const attentionSoft = Color(0xFFF2E8CC);
+  static const urgent = Color(0xFFB42318);
+  static const urgentSoft = Color(0xFFFDEAEA);
+  static const attention = Color(0xFFD92D20);
+  static const attentionSoft = Color(0xFFFEE4E2);
+  static const observation = Color(0xFFB45309);
+  static const observationSoft = Color(0xFFFEF3C7);
 }
 
 class IzesTheme {

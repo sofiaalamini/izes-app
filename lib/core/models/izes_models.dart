@@ -72,10 +72,10 @@ class AlertItem {
       label: critical
           ? 'Urgente'
           : active
-          ? 'Atencao'
-          : 'Estavel',
+          ? 'Atenção'
+          : 'Estável',
       sensorName: title,
-      location: local.isEmpty ? 'Area monitorada' : local,
+      location: local.isEmpty ? 'Área monitorada' : local,
       temperature: reading['temperatura'] == null
           ? null
           : '${reading['temperatura']} C',
@@ -87,17 +87,17 @@ class AlertItem {
   factory AlertItem.fromApiAlertas(Map<String, dynamic> json) {
     final severity = '${json['severidade'] ?? ''}'.toLowerCase();
     final parametro = '${json['parametro'] ?? 'Manejo'}'.trim();
-    final local = '${json['zona_id'] ?? json['sensor_id'] ?? 'area monitorada'}'
+    final local = '${json['zona_id'] ?? json['sensor_id'] ?? 'área monitorada'}'
         .trim();
     return AlertItem(
       level: switch (severity) {
-        'critico' || 'alto' => AlertLevel.urgent,
-        'medio' || 'médio' => AlertLevel.attention,
+        'critico' || 'crítico' || 'alto' => AlertLevel.urgent,
+        'medio' || 'médio' || 'mÃ©dio' => AlertLevel.attention,
         _ => AlertLevel.ok,
       },
       title: '$parametro em $local',
       detail:
-          '${json['acao_descricao'] ?? json['mensagem_ia'] ?? 'Acompanhe a area e confira a proxima leitura.'}',
+          '${json['acao_descricao'] ?? json['mensagem_ia'] ?? 'Acompanhe a área e confira a próxima leitura.'}',
       label: '${json['severidade'] ?? 'baixo'}',
       sensorName: '${json['sensor_id'] ?? parametro}',
       location: local,

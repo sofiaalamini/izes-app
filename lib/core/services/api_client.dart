@@ -102,7 +102,7 @@ class ApiClient {
     final fileExists = await file.exists();
     if (!fileExists && fileBytes.isEmpty) {
       throw ApiException(
-        'Arquivo de imagem nao encontrado para upload: $filePath',
+        'Arquivo de imagem não encontrado para upload: $filePath',
       );
     }
     if (debugLabel != null && debugLabel.isNotEmpty) {
@@ -182,7 +182,7 @@ class ApiClient {
     if (data is Map<String, dynamic>) {
       return data;
     }
-    throw const ApiException('Nao foi possivel carregar os dados agora.');
+    throw const ApiException('Não foi possível carregar os dados agora.');
   }
 
   List<dynamic> _decodeList(http.Response response) {
@@ -190,14 +190,14 @@ class ApiClient {
     if (data is List<dynamic>) {
       return data;
     }
-    throw const ApiException('Nao foi possivel carregar os dados agora.');
+    throw const ApiException('Não foi possível carregar os dados agora.');
   }
 
   dynamic _decode(http.Response response) {
     if (response.statusCode < 200 || response.statusCode >= 300) {
       final body = response.body.trim();
       throw ApiException(
-        'HTTP ${response.statusCode}: ${body.isEmpty ? 'Nao foi possivel concluir sua solicitacao.' : body}',
+        'HTTP ${response.statusCode}: ${body.isEmpty ? 'Não foi possível concluir sua solicitação.' : body}',
       );
     }
 

@@ -14,12 +14,12 @@ class WeatherService {
     final clientId = AuthService().resolvedClientId;
     if (clientId.isEmpty) {
       throw const WeatherException(
-        'Cliente nao configurado para consultar o clima do sensor.',
+        'Cliente não configurado para consultar o clima do sensor.',
       );
     }
 
     if (sensorId.trim().isEmpty) {
-      throw const WeatherException('Sensor invalido para consultar o clima.');
+      throw const WeatherException('Sensor inválido para consultar o clima.');
     }
 
     try {
@@ -59,7 +59,7 @@ class WeatherService {
       final chanceOfRain = _asInt(forecast['precipitacao_probabilidade']) ?? 0;
       final windKph = (_asDouble(current['velocidade_vento']) ?? 0) * 3.6;
       final city =
-          '${localizacao['municipio'] ?? localizacao['cidade'] ?? location['municipio'] ?? 'Sua regiao'}';
+          '${localizacao['municipio'] ?? localizacao['cidade'] ?? location['municipio'] ?? 'Sua região'}';
       final region = '${localizacao['estado'] ?? location['estado'] ?? ''}';
 
       return WeatherModel(
@@ -71,7 +71,7 @@ class WeatherService {
         precipitationMm: precipitationMm,
         chanceOfRain: chanceOfRain,
         condition:
-            '${current['descricao'] ?? current['condicao'] ?? 'Sem atualizacao'}',
+            '${current['descricao'] ?? current['condicao'] ?? 'Sem atualização'}',
         windKph: windKph,
         agriculturalRecommendation: _buildRecommendation(
           backendAlert: backendAlert,
@@ -95,7 +95,7 @@ class WeatherService {
     } catch (exc, stackTrace) {
       debugPrint('WeatherService.getWeatherBySensor unexpected error: $exc');
       debugPrintStack(stackTrace: stackTrace);
-      throw const WeatherException('Nao foi possivel consultar o clima agora.');
+      throw const WeatherException('Não foi possível consultar o clima agora.');
     }
   }
 
@@ -123,21 +123,21 @@ class WeatherService {
       return backendAlert;
     }
     if (dryRisk >= 60) {
-      return 'Ha risco elevado de seca para esta area.';
+      return 'Há risco elevado de seca para esta área.';
     }
     if (chanceOfRain >= 60 || precipitationMm >= 3) {
-      return 'Evite pulverizacao hoje.';
+      return 'Evite pulverização hoje.';
     }
     if (temperatureC >= 32) {
-      return 'Priorize irrigacao no inicio da manha ou fim da tarde.';
+      return 'Priorize irrigação no início da manhã ou fim da tarde.';
     }
     if (humidity <= 35) {
-      return 'Atencao ao estresse hidrico da cultura.';
+      return 'Atenção ao estresse hídrico da cultura.';
     }
     if (windKph >= 22) {
-      return 'Revise operacoes sensiveis ao vento antes de aplicar insumos.';
+      return 'Revise operações sensíveis ao vento antes de aplicar insumos.';
     }
-    return 'Condicoes estaveis para manejo, com monitoramento ao longo do dia.';
+    return 'Condições estáveis para manejo, com monitoramento ao longo do dia.';
   }
 
   double? _asDouble(dynamic value) {

@@ -25,7 +25,8 @@ class AuthService extends ChangeNotifier {
 
   AuthUser? get currentUser => _currentUser;
 
-  String get resolvedClientId => _currentUser?.clienteId ?? BackendConfig.clientId;
+  String get resolvedClientId =>
+      _currentUser?.clienteId ?? BackendConfig.clientId;
 
   Future<void> login({
     required String email,
@@ -38,14 +39,16 @@ class AuthService extends ChangeNotifier {
     );
 
     if (response.statusCode < 200 || response.statusCode >= 300) {
-      throw AuthException(_extractMessage(response, fallback: 'Nao foi possivel entrar.'));
+      throw AuthException(
+        _extractMessage(response, fallback: 'Não foi possível entrar.'),
+      );
     }
 
     final data = jsonDecode(response.body) as Map<String, dynamic>;
     final token = '${data['access_token'] ?? ''}'.trim();
     final userJson = data['user'] as Map<String, dynamic>?;
     if (token.isEmpty || userJson == null) {
-      throw const AuthException('Resposta de login invalida.');
+      throw const AuthException('Resposta de login inválida.');
     }
 
     _accessToken = token;
@@ -72,7 +75,10 @@ class AuthService extends ChangeNotifier {
 
     if (response.statusCode < 200 || response.statusCode >= 300) {
       throw AuthException(
-        _extractMessage(response, fallback: 'Nao foi possivel concluir o cadastro.'),
+        _extractMessage(
+          response,
+          fallback: 'Não foi possível concluir o cadastro.',
+        ),
       );
     }
 
@@ -92,7 +98,7 @@ class AuthService extends ChangeNotifier {
 
     if (!BackendConfig.hasAuthCredentials) {
       throw const AuthException(
-        'API_AUTH_EMAIL e API_AUTH_PASSWORD nao configurados no .env.',
+        'API_AUTH_EMAIL e API_AUTH_PASSWORD não configurados no .env.',
       );
     }
 
@@ -109,7 +115,7 @@ class AuthService extends ChangeNotifier {
       throw AuthException(
         _extractMessage(
           response,
-          fallback: 'Nao foi possivel iniciar sua sessao.',
+          fallback: 'Não foi possível iniciar sua sessão.',
         ),
       );
     }
@@ -117,7 +123,7 @@ class AuthService extends ChangeNotifier {
     final data = jsonDecode(response.body) as Map<String, dynamic>;
     final token = '${data['access_token'] ?? ''}'.trim();
     if (token.isEmpty) {
-      throw const AuthException('Backend nao retornou access_token.');
+      throw const AuthException('Backend não retornou access_token.');
     }
 
     _accessToken = token;

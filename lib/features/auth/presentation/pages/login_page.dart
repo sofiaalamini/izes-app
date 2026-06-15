@@ -63,8 +63,8 @@ class _LoginPageState extends State<LoginPage> {
     } catch (_) {
       setState(() {
         _errorMessage = _isRegisterMode
-            ? 'Nao foi possivel concluir o cadastro.'
-            : 'Nao foi possivel entrar agora.';
+            ? 'Não foi possível concluir o cadastro.'
+            : 'Não foi possível entrar agora.';
       });
     } finally {
       if (mounted) {
@@ -93,7 +93,7 @@ class _LoginPageState extends State<LoginPage> {
             const SizedBox(height: 8),
             Text(
               _isRegisterMode
-                  ? 'Crie seu acesso para acompanhar a operacao.'
+                  ? 'Crie seu acesso para acompanhar a operação.'
                   : 'Entre para acompanhar sua propriedade.',
               style: theme.bodyLarge?.copyWith(color: IzesColors.muted),
             ),
@@ -113,7 +113,7 @@ class _LoginPageState extends State<LoginPage> {
                     const SizedBox(height: 4),
                     Text(
                       _isRegisterMode
-                          ? 'Preencha os dados para comecar.'
+                          ? 'Preencha os dados para começar.'
                           : 'Use seu e-mail e senha para entrar.',
                       style: theme.bodyMedium,
                     ),
@@ -125,7 +125,7 @@ class _LoginPageState extends State<LoginPage> {
                         controller: _nameController,
                         textInputAction: TextInputAction.next,
                         decoration: const InputDecoration(
-                          hintText: 'Como voce quer aparecer no app',
+                          hintText: 'Como você quer aparecer no app',
                         ),
                         validator: (value) {
                           if ((value ?? '').trim().length < 3) {
@@ -143,7 +143,7 @@ class _LoginPageState extends State<LoginPage> {
                       keyboardType: TextInputType.emailAddress,
                       textInputAction: TextInputAction.next,
                       decoration: const InputDecoration(
-                        hintText: 'voce@empresa.com',
+                        hintText: 'você@empresa.com',
                       ),
                       validator: (value) {
                         final text = (value ?? '').trim();
@@ -151,7 +151,7 @@ class _LoginPageState extends State<LoginPage> {
                           return 'Informe seu e-mail.';
                         }
                         if (!text.contains('@') || !text.contains('.')) {
-                          return 'Digite um e-mail valido.';
+                          return 'Digite um e-mail válido.';
                         }
                         return null;
                       },
@@ -164,7 +164,7 @@ class _LoginPageState extends State<LoginPage> {
                         controller: _clientIdController,
                         textInputAction: TextInputAction.next,
                         decoration: const InputDecoration(
-                          hintText: 'Codigo da propriedade ou operacao',
+                          hintText: 'Código da propriedade ou operação',
                         ),
                         validator: (value) {
                           if ((value ?? '').trim().isEmpty) {
@@ -193,7 +193,7 @@ class _LoginPageState extends State<LoginPage> {
                     if (_errorMessage != null) ...[
                       const SizedBox(height: 14),
                       AppStateCard(
-                        title: 'Nao foi possivel continuar',
+                        title: 'Não foi possível continuar',
                         message: _errorMessage!,
                         tone: AppStateTone.warning,
                       ),
@@ -227,7 +227,7 @@ class _LoginPageState extends State<LoginPage> {
                                 });
                               },
                         child: Text(
-                          _isRegisterMode ? 'Ja tenho conta' : 'Criar cadastro',
+                          _isRegisterMode ? 'Já tenho conta' : 'Criar cadastro',
                         ),
                       ),
                     ),
@@ -237,7 +237,7 @@ class _LoginPageState extends State<LoginPage> {
             ),
             const SizedBox(height: 12),
             Text(
-              'Ao entrar, voce acessa dashboard, alertas, clima e leituras dos sensores da propriedade.',
+              'Ao entrar, você acessa dashboard, alertas, clima e leituras dos sensores da propriedade.',
               style: theme.bodySmall?.copyWith(color: IzesColors.muted),
             ),
           ],

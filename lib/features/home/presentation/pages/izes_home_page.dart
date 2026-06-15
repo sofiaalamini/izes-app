@@ -59,7 +59,7 @@ class _IzesHomePageState extends State<IzesHomePage> {
       case HomeSection.monitoring:
         return 'Clima e sensores';
       case HomeSection.ai:
-        return 'Orientacao rapida';
+        return 'Orientação rápida';
     }
   }
 

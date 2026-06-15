@@ -26,7 +26,7 @@ class _AiAssistantPageState extends State<AiAssistantPage> {
   final List<ChatMessage> _messages = const [
     ChatMessage(
       text:
-          'Sou o Assistente IZES. Posso resumir prioridade, irrigacao, risco de praga e proximos passos.',
+          'Sou o Assistente IZES. Posso resumir prioridade, irrigação, risco de praga e próximos passos.',
       isUser: false,
     ),
   ].toList();
@@ -85,7 +85,7 @@ class _AiAssistantPageState extends State<AiAssistantPage> {
       setState(() {
         _messages.add(
           const ChatMessage(
-            text: 'Nao foi possivel consultar a IA agora.',
+            text: 'Não foi possível consultar a IA agora.',
             isUser: false,
           ),
         );
@@ -113,7 +113,7 @@ class _AiAssistantPageState extends State<AiAssistantPage> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Nao foi possivel abrir a camera ou galeria agora.'),
+          content: Text('Não foi possível abrir a câmera ou galeria agora.'),
         ),
       );
     }
@@ -241,12 +241,6 @@ class _AiAssistantPageState extends State<AiAssistantPage> {
   Widget build(BuildContext context) {
     final hasConversation = _messages.any((message) => message.isUser);
     final visibleMessages = hasConversation ? _messages : _messages.skip(1);
-    const suggestions = [
-      'Devo irrigar hoje?',
-      'Qual talhao precisa de atencao?',
-      'O que faco primeiro esta semana?',
-      'Existe risco de praga?',
-    ];
 
     return Column(
       children: [
@@ -256,23 +250,10 @@ class _AiAssistantPageState extends State<AiAssistantPage> {
             children: [
               const SectionHeader(
                 eyebrow: 'Assistente IZES',
-                title: 'Apoio rapido para decidir no campo',
+                title: 'Apoio rápido para decidir no campo',
                 description:
-                    'Use o assistente para resumir prioridade, risco e proximos passos sem abrir varias telas.',
+                    'Use o assistente para resumir prioridade, risco e próximos passos sem abrir várias telas.',
                 compact: true,
-              ),
-              const SizedBox(height: 16),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: suggestions
-                    .map(
-                      (item) => ActionChip(
-                        label: Text(item),
-                        onPressed: () => _sendQuestion(item),
-                      ),
-                    )
-                    .toList(),
               ),
               const SizedBox(height: 16),
               if (!hasConversation && !_loading)
@@ -281,9 +262,9 @@ class _AiAssistantPageState extends State<AiAssistantPage> {
                   child: AppStateCard(
                     title: 'Nenhuma conversa iniciada ainda',
                     message:
-                        'Escolha uma pergunta acima ou escreva o que voce precisa decidir hoje.',
+                        'Escreva o que você precisa decidir hoje para iniciar a conversa.',
                     supportingText:
-                        'Exemplos: irrigacao, risco de praga, sensores com atencao ou prioridade da semana.',
+                        'Exemplos: irrigação, risco de praga, sensores com atenção ou prioridade da semana.',
                   ),
                 ),
               ...visibleMessages.map(
@@ -336,7 +317,7 @@ class _AiAssistantPageState extends State<AiAssistantPage> {
               ),
               if (_loading)
                 Padding(
-                  padding: EdgeInsets.only(top: 4),
+                  padding: const EdgeInsets.only(top: 4),
                   child: Align(
                     alignment: Alignment.centerLeft,
                     child: AppSurfaceCard(
@@ -345,12 +326,12 @@ class _AiAssistantPageState extends State<AiAssistantPage> {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          SizedBox(
+                          const SizedBox(
                             height: 16,
                             width: 16,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           ),
-                          SizedBox(width: 10),
+                          const SizedBox(width: 10),
                           Text(_loadingMessage),
                         ],
                       ),

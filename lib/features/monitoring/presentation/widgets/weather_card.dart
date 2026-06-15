@@ -18,7 +18,7 @@ class WeatherCard extends StatelessWidget {
         : '${weather.city}, ${weather.region}';
     final updatedAt = DateTimeFormatter.shortDateTime(weather.fetchedAt);
     final message = weather.agriculturalRecommendation.isEmpty
-        ? 'Sem recomendacao adicional no momento.'
+        ? 'Sem recomendação adicional no momento.'
         : weather.agriculturalRecommendation;
 
     return AppSurfaceCard(

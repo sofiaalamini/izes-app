@@ -12,7 +12,7 @@ class SensorService {
     final clientId = AuthService().resolvedClientId;
     if (clientId.isEmpty) {
       throw const SensorServiceException(
-        'Cliente nao configurado para carregar sensores.',
+        'Cliente não configurado para carregar sensores.',
       );
     }
 
@@ -34,7 +34,7 @@ class SensorService {
     final humidity = _asInt(reading['umidade']);
     final ph = _asDouble(reading['ph']);
     final property = '${sensor['propriedade'] ?? 'Propriedade'}';
-    final city = '${sensor['municipio'] ?? 'Municipio'}';
+    final city = '${sensor['municipio'] ?? 'Município'}';
     final state = '${sensor['estado'] ?? 'UF'}';
     final hasReading = reading['timestamp'] != null;
 
@@ -42,7 +42,10 @@ class SensorService {
       if (humidity != null)
         SensorFact(label: 'Umidade', value: '${humidity.toString()}%'),
       if (temperature != null)
-        SensorFact(label: 'Temperatura', value: '${temperature.toStringAsFixed(1)} C'),
+        SensorFact(
+          label: 'Temperatura',
+          value: '${temperature.toStringAsFixed(1)} C',
+        ),
       if (ph != null) SensorFact(label: 'pH', value: ph.toStringAsFixed(1)),
     ];
 
@@ -55,7 +58,7 @@ class SensorService {
         critical: reading['nivel_critico'] == true,
       ),
       lastReading: _parseDateTime(reading['timestamp']),
-      note: '$property · $city/$state',
+      note: '$property • $city/$state',
       primaryValue: facts.isEmpty ? 'Sem leitura' : facts.first.value,
       location: property,
       facts: facts,

@@ -48,7 +48,7 @@ class _MonitoringPageState extends State<MonitoringPage> {
     _weatherFuture = _sensorsFuture.then((sensors) {
       if (sensors.isEmpty) {
         throw const WeatherException(
-          'Nenhum sensor disponivel para consultar o clima.',
+          'Nenhum sensor disponível para consultar o clima.',
         );
       }
 
@@ -80,7 +80,7 @@ class _MonitoringPageState extends State<MonitoringPage> {
     if (error is WeatherException) {
       return error.message;
     }
-    return 'O clima nao esta disponivel agora.';
+    return 'O clima não está disponível agora.';
   }
 
   bool _isSessionExpiredMessage(String message) {
@@ -110,7 +110,7 @@ class _MonitoringPageState extends State<MonitoringPage> {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return _StateCard(
                   title: 'Clima atual',
-                  message: 'Atualizando as condicoes mais recentes da area.',
+                  message: 'Atualizando as condições mais recentes da área.',
                   supportingText: 'Isso leva apenas alguns instantes.',
                   loading: true,
                 );
@@ -122,7 +122,7 @@ class _MonitoringPageState extends State<MonitoringPage> {
                 return _StateCard(
                   title: 'Clima atual',
                   message: expiredSession
-                      ? 'Sua sessao expirou. Entre novamente para continuar.'
+                      ? 'Sua sessão expirou. Entre novamente para continuar.'
                       : message,
                   supportingText: expiredSession
                       ? 'Ao entrar de novo, o app volta a carregar clima e sensores normalmente.'
@@ -137,7 +137,7 @@ class _MonitoringPageState extends State<MonitoringPage> {
                           if (sensorId == null) {
                             _weatherFuture = Future<WeatherModel>.error(
                               const WeatherException(
-                                'Nenhum sensor disponivel para consultar o clima.',
+                                'Nenhum sensor disponível para consultar o clima.',
                               ),
                             );
                           } else {
@@ -156,9 +156,9 @@ class _MonitoringPageState extends State<MonitoringPage> {
               if (weather == null) {
                 return _StateCard(
                   title: 'Clima atual',
-                  message: 'Sem atualizacao de clima no momento.',
+                  message: 'Sem atualização de clima no momento.',
                   supportingText:
-                      'Tente novamente quando houver uma nova consulta para esta area.',
+                      'Tente novamente quando houver uma nova consulta para esta área.',
                 );
               }
 
@@ -170,7 +170,7 @@ class _MonitoringPageState extends State<MonitoringPage> {
             eyebrow: 'Leituras de campo',
             title: 'Sensores da propriedade',
             description:
-                'Ultimas leituras recebidas para identificar rapidamente o que precisa de acompanhamento.',
+                'Últimas leituras recebidas para identificar rapidamente o que precisa de acompanhamento.',
             compact: true,
           ),
           const SizedBox(height: 12),
@@ -182,7 +182,7 @@ class _MonitoringPageState extends State<MonitoringPage> {
                   title: 'Sensores da propriedade',
                   message: 'Buscando as leituras mais recentes.',
                   supportingText:
-                      'Os sensores ativos serao exibidos assim que a consulta terminar.',
+                      'Os sensores ativos serão exibidos assim que a consulta terminar.',
                   loading: true,
                 );
               }
@@ -193,8 +193,8 @@ class _MonitoringPageState extends State<MonitoringPage> {
                 return _StateCard(
                   title: 'Sensores da propriedade',
                   message: expiredSession
-                      ? 'Sua sessao expirou. Entre novamente para continuar.'
-                      : 'Nao foi possivel carregar os sensores agora.',
+                      ? 'Sua sessão expirou. Entre novamente para continuar.'
+                      : 'Não foi possível carregar os sensores agora.',
                   supportingText: expiredSession
                       ? 'Ao entrar de novo, as leituras de campo voltam a aparecer aqui.'
                       : 'Tente atualizar novamente em instantes.',

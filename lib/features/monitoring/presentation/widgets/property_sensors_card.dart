@@ -64,7 +64,7 @@ class _SensorTile extends StatelessWidget {
     final recommendation = _recommendationText(sensor);
     final lastReading = sensor.lastReading == null
         ? 'Nenhuma leitura recente encontrada.'
-        : 'Ultima leitura: ${DateTimeFormatter.shortDateTime(sensor.lastReading)}';
+        : 'Última leitura: ${DateTimeFormatter.shortDateTime(sensor.lastReading)}';
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
@@ -204,9 +204,9 @@ class _SensorTile extends StatelessWidget {
   String _statusLabel(SensorStatus status) {
     switch (status) {
       case SensorStatus.online:
-        return 'Estavel';
+        return 'Estável';
       case SensorStatus.attention:
-        return 'Atencao';
+        return 'Atenção';
       case SensorStatus.offline:
         return 'Urgente';
     }
@@ -224,22 +224,22 @@ class _SensorTile extends StatelessWidget {
   String _summaryText(SensorModel sensor) {
     switch (sensor.status) {
       case SensorStatus.online:
-        return 'Leitura recente recebida e sensor estavel.';
+        return 'Leitura recente recebida e sensor estável.';
       case SensorStatus.attention:
         return 'Este sensor exige acompanhamento agora.';
       case SensorStatus.offline:
-        return 'Sem leitura recente para apoiar a decisao.';
+        return 'Sem leitura recente para apoiar a decisão.';
     }
   }
 
   String _recommendationText(SensorModel sensor) {
     switch (sensor.status) {
       case SensorStatus.online:
-        return 'Continue monitorando as proximas atualizacoes ao longo do dia.';
+        return 'Continue monitorando as próximas atualizações ao longo do dia.';
       case SensorStatus.attention:
         return 'Revise as leituras mais recentes e confirme se o manejo precisa de ajuste.';
       case SensorStatus.offline:
-        return 'Verifique conexao, energia ou envio de leitura deste sensor.';
+        return 'Verifique conexão, energia ou envio de leitura deste sensor.';
     }
   }
 }

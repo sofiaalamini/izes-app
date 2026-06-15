@@ -28,7 +28,7 @@ class DashboardService {
     final clientId = AuthService().resolvedClientId;
     if (clientId.isEmpty) {
       throw const ApiDashboardException(
-        'Cliente nao configurado para carregar o dashboard.',
+        'Cliente não configurado para carregar o dashboard.',
       );
     }
 
@@ -47,7 +47,8 @@ class DashboardService {
         .whereType<Map<String, dynamic>>()
         .toList();
 
-    final urgentCount = alerts.where((alert) => alert.level == AlertLevel.urgent).length;
+    final urgentCount =
+        alerts.where((alert) => alert.level == AlertLevel.urgent).length;
     final attentionCount = alerts
         .where((alert) => alert.level == AlertLevel.attention)
         .length;
@@ -61,7 +62,9 @@ class DashboardService {
         sensorCount: sensors.length,
       ),
       alerts: alerts.take(3).toList(),
-      updatedAtLabel: DateTimeFormatter.shortDateTime(sensorsData['atualizado_em']),
+      updatedAtLabel: DateTimeFormatter.shortDateTime(
+        sensorsData['atualizado_em'],
+      ),
     );
   }
 }

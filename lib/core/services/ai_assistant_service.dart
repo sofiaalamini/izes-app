@@ -15,12 +15,12 @@ class AiAssistantService {
     final clientId = AuthService().resolvedClientId;
     if (clientId.isEmpty) {
       throw const AiAssistantException(
-        'Cliente nao configurado para usar o assistente.',
+        'Cliente não configurado para usar o assistente.',
       );
     }
     if (!BackendConfig.hasAppToken) {
       throw const AiAssistantException(
-        'API_APP_TOKEN nao configurado no .env.',
+        'API_APP_TOKEN não configurado no .env.',
       );
     }
 
@@ -50,22 +50,22 @@ class AiAssistantService {
         return fallbackReply;
       }
 
-      return 'Nao consegui gerar uma resposta agora.';
+      return 'Não consegui gerar uma resposta agora.';
     } on ApiException catch (error) {
       debugPrint('IA chat error: $error');
       if (error.message.contains('HTTP 401')) {
         throw const AiAssistantException(
-          'Sua sessao expirou ou o token do app esta invalido.',
+          'Sua sessão expirou ou o token do app está inválido.',
         );
       }
       throw const AiAssistantException(
-        'Nao foi possivel consultar a IA agora.',
+        'Não foi possível consultar a IA agora.',
       );
     } catch (error, stackTrace) {
       debugPrint('IA chat unexpected error: $error');
       debugPrintStack(stackTrace: stackTrace);
       throw const AiAssistantException(
-        'Nao foi possivel consultar a IA agora.',
+        'Não foi possível consultar a IA agora.',
       );
     }
   }
@@ -80,21 +80,20 @@ class AiAssistantService {
     final clientId = AuthService().resolvedClientId;
     if (clientId.isEmpty) {
       throw const AiAssistantException(
-        'Cliente nao configurado para usar o assistente.',
+        'Cliente não configurado para usar o assistente.',
       );
     }
     if (!BackendConfig.hasAppToken) {
       throw const AiAssistantException(
-        'API_APP_TOKEN nao configurado no .env.',
+        'API_APP_TOKEN não configurado no .env.',
       );
     }
 
     try {
-      final fields = <String, String>{'cliente_id': clientId};
-      final trimmedMessage = message?.trim() ?? '';
-      if (trimmedMessage.isNotEmpty) {
-        fields['mensagem'] = trimmedMessage;
-      }
+      final fields = <String, String>{
+        'cliente_id': clientId,
+        'mensagem': _buildImageAnalysisPrompt(message),
+      };
       if (sensorId != null && sensorId.trim().isNotEmpty) {
         fields['sensor_id'] = sensorId.trim();
       }
@@ -103,9 +102,7 @@ class AiAssistantService {
       debugPrint('IA image path: $imagePath');
       debugPrint('IA image filename: ${fileName ?? '(sem nome)'}');
       debugPrint('IA image bytes: ${imageBytes?.length ?? 0}');
-      if (trimmedMessage.isNotEmpty) {
-        debugPrint('IA multipart text field: mensagem');
-      }
+      debugPrint('IA multipart text field: mensagem');
 
       final data = await _apiClient.postMultipart(
         '/api/ia/analisar-imagem',
@@ -129,7 +126,7 @@ class AiAssistantService {
       debugPrint('IA image error: $error');
       if (error.message.contains('HTTP 401')) {
         throw const AiAssistantException(
-          'Sua sessao expirou ou o token do app esta invalido.',
+          'Sua sessão expirou ou o token do app está inválido.',
         );
       }
       throw AiAssistantException(error.message);
@@ -138,6 +135,37 @@ class AiAssistantService {
       debugPrintStack(stackTrace: stackTrace);
       throw AiAssistantException('Erro inesperado ao analisar imagem: $error');
     }
+  }
+
+  String _buildImageAnalysisPrompt(String? userMessage) {
+    final trimmed = userMessage?.trim() ?? '';
+    final userContext = trimmed.isEmpty
+        ? ''
+        : '\n\nContexto do produtor: $trimmed';
+
+    return '''
+Analise esta imagem como um assistente agrícola para produtor rural.
+Não descreva apenas o que aparece na foto.
+Responda de forma curta, clara, prática e orientada à decisão.
+
+Use exatamente esta estrutura:
+1. Possível problema
+2. Nível de atenção
+3. O que fazer agora
+4. Observação
+
+Regras:
+- Em "Possível problema", traga uma hipótese provável com linguagem simples.
+- Em "Nível de atenção", use apenas um destes valores: Baixo, Atenção ou Urgente.
+- Em "O que fazer agora", dê ações práticas em lista curta.
+- Em "Observação", deixe claro quando a imagem não permite confirmar a causa exata.
+- Não responda apenas descrevendo a imagem.
+- Não dê diagnóstico definitivo sem certeza.
+- Não recomende produto químico específico.
+- Considere possibilidade de praga, doença foliar, deficiência nutricional, dano físico ou estresse hídrico/térmico, quando fizer sentido.
+
+Se a imagem estiver inconclusiva, ainda assim responda na estrutura acima e oriente o acompanhamento no campo.$userContext
+''';
   }
 
   MediaType _resolveImageContentType(String? fileName) {

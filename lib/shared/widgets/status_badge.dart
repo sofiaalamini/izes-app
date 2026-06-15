@@ -9,29 +9,54 @@ class StatusBadge extends StatelessWidget {
   final AlertLevel level;
   final String? label;
 
-  Color get _background {
+  _BadgePalette get _palette {
+    final normalized = _normalizeLabel(label ?? _defaultText).toLowerCase();
+
+    if (normalized.contains('observação')) {
+      return const _BadgePalette(
+        background: IzesColors.observationSoft,
+        foreground: IzesColors.observation,
+      );
+    }
+    if (normalized.contains('atenção')) {
+      return const _BadgePalette(
+        background: IzesColors.attentionSoft,
+        foreground: IzesColors.attention,
+      );
+    }
+    if (normalized.contains('estável') || normalized.contains('tudo certo')) {
+      return const _BadgePalette(
+        background: IzesColors.greenSoft,
+        foreground: IzesColors.green,
+      );
+    }
+    if (normalized.contains('urgente') || normalized.contains('ação')) {
+      return const _BadgePalette(
+        background: IzesColors.urgentSoft,
+        foreground: IzesColors.urgent,
+      );
+    }
+
     switch (level) {
       case AlertLevel.urgent:
-        return IzesColors.urgentSoft;
+        return const _BadgePalette(
+          background: IzesColors.urgentSoft,
+          foreground: IzesColors.urgent,
+        );
       case AlertLevel.attention:
-        return IzesColors.attentionSoft;
+        return const _BadgePalette(
+          background: IzesColors.attentionSoft,
+          foreground: IzesColors.attention,
+        );
       case AlertLevel.ok:
-        return IzesColors.greenSoft;
+        return const _BadgePalette(
+          background: IzesColors.greenSoft,
+          foreground: IzesColors.green,
+        );
     }
   }
 
-  Color get _foreground {
-    switch (level) {
-      case AlertLevel.urgent:
-        return IzesColors.urgent;
-      case AlertLevel.attention:
-        return IzesColors.attention;
-      case AlertLevel.ok:
-        return IzesColors.green;
-    }
-  }
-
-  String get _text {
+  String get _defaultText {
     switch (level) {
       case AlertLevel.urgent:
         return 'Ação urgente';
@@ -44,21 +69,46 @@ class StatusBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = _palette;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
       decoration: BoxDecoration(
-        color: _background,
+        color: palette.background,
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: _foreground.withValues(alpha: 0.10)),
+        border: Border.all(color: palette.foreground.withValues(alpha: 0.10)),
       ),
       child: Text(
-        label ?? _text,
+        _normalizeLabel(label ?? _defaultText),
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
-        style: Theme.of(
-          context,
-        ).textTheme.labelMedium?.copyWith(color: _foreground, fontSize: 10.5),
+        style: Theme.of(context).textTheme.labelMedium?.copyWith(
+          color: palette.foreground,
+          fontSize: 10.5,
+        ),
       ),
     );
   }
+
+  String _normalizeLabel(String value) {
+    return value
+        .replaceAll('Acao', 'Ação')
+        .replaceAll('acao', 'ação')
+        .replaceAll('Atencao', 'Atenção')
+        .replaceAll('atencao', 'atenção')
+        .replaceAll('Estavel', 'Estável')
+        .replaceAll('estavel', 'estável')
+        .replaceAll('Observacao', 'Observação')
+        .replaceAll('observacao', 'observação');
+  }
+}
+
+class _BadgePalette {
+  const _BadgePalette({
+    required this.background,
+    required this.foreground,
+  });
+
+  final Color background;
+  final Color foreground;
 }

@@ -37,7 +37,7 @@ class _AlertsPageState extends State<AlertsPage> {
               eyebrow: 'Alertas',
               title: 'Prioridades do dia',
               description:
-                  'Veja rapidamente o que exige acao, revisao ou monitoramento.',
+                  'Veja rapidamente o que exige ação, revisão ou monitoramento.',
               compact: true,
             ),
             const SizedBox(height: 14),
@@ -48,7 +48,7 @@ class _AlertsPageState extends State<AlertsPage> {
               ),
             if (snapshot.hasError)
               _InlineState(
-                message: 'Nao foi possivel atualizar os alertas agora.',
+                message: 'Não foi possível atualizar os alertas agora.',
                 actionLabel: 'Tentar novamente',
                 onAction: _reload,
               ),
@@ -94,9 +94,9 @@ class _AlertsPageState extends State<AlertsPage> {
       case AlertLevel.urgent:
         return 'Urgente';
       case AlertLevel.attention:
-        return 'Atencao';
+        return 'Atenção';
       case AlertLevel.ok:
-        return 'Estavel';
+        return 'Estável';
     }
   }
 }
@@ -215,27 +215,102 @@ class _AlertCard extends StatelessWidget {
   }
 
   String _problemText(AlertItem alert) {
-    if (alert.level == AlertLevel.urgent) {
-      return 'Acao imediata recomendada para ${alert.sensorName ?? 'este sensor'}.';
+    switch (_issueForAlert(alert)) {
+      case _AlertIssue.noReading:
+        return 'Sem leitura recente para ${alert.sensorName ?? 'este sensor'}.';
+      case _AlertIssue.phLow:
+        return 'pH abaixo do ideal em ${alert.sensorName ?? 'este sensor'}.';
+      case _AlertIssue.phHigh:
+        return 'pH acima do ideal em ${alert.sensorName ?? 'este sensor'}.';
+      case _AlertIssue.humidityLow:
+        return 'Umidade do solo baixa em ${alert.sensorName ?? 'este sensor'}.';
+      case _AlertIssue.humidityHigh:
+        return 'Umidade do solo elevada em ${alert.sensorName ?? 'este sensor'}.';
+      case _AlertIssue.temperatureHigh:
+        return 'Temperatura elevada em ${alert.sensorName ?? 'este sensor'}.';
+      case _AlertIssue.temperatureLow:
+        return 'Temperatura baixa em ${alert.sensorName ?? 'este sensor'}.';
+      case _AlertIssue.generic:
+        if (alert.level == AlertLevel.urgent) {
+          return 'Ação imediata recomendada para ${alert.sensorName ?? 'este sensor'}.';
+        }
+        if (alert.level == AlertLevel.attention) {
+          return '${alert.sensorName ?? 'Este sensor'} exige acompanhamento.';
+        }
+        return '${alert.sensorName ?? 'Sensor'} segue estável.';
     }
-    if (alert.level == AlertLevel.attention) {
-      return '${alert.sensorName ?? 'Este sensor'} exige acompanhamento.';
-    }
-    return '${alert.sensorName ?? 'Sensor'} segue estavel.';
   }
 
   String _recommendationText(AlertItem alert) {
-    if (alert.ph != null && alert.ph != '--') {
-      return 'pH abaixo do ideal. Vale revisar a correcao do solo.';
+    switch (_issueForAlert(alert)) {
+      case _AlertIssue.noReading:
+        return 'Verifique conexão, energia ou envio de leitura antes da próxima análise.';
+      case _AlertIssue.phLow:
+        return 'Revisar a acidez do solo e avaliar correção para elevar o pH.';
+      case _AlertIssue.phHigh:
+        return 'Revisar a alcalinidade do solo e validar a disponibilidade de nutrientes.';
+      case _AlertIssue.humidityLow:
+        return 'Programar irrigação e comparar a próxima leitura para confirmar a recuperação.';
+      case _AlertIssue.humidityHigh:
+        return 'Suspender irrigação e verificar drenagem para evitar encharcamento.';
+      case _AlertIssue.temperatureHigh:
+        return 'Acompanhar aquecimento do solo e revisar necessidade de irrigação ou proteção.';
+      case _AlertIssue.temperatureLow:
+        return 'Monitorar a temperatura do solo e evitar manejo sensível até a estabilização.';
+      case _AlertIssue.generic:
+        return 'Revisar o contexto da leitura e definir a próxima ação no campo.';
     }
-    if (alert.humidity != null && alert.humidity != '--') {
-      return 'Monitorar a umidade nas proximas horas e comparar com a proxima leitura.';
-    }
-    if (alert.temperature != null && alert.temperature != '--') {
-      return 'Conferir a temperatura do sensor e validar a tendencia do dia.';
-    }
-    return 'Revisar o contexto e definir a proxima acao.';
   }
+
+  _AlertIssue _issueForAlert(AlertItem alert) {
+    final ph = _parseValue(alert.ph);
+    final humidity = _parseValue(alert.humidity);
+    final temperature = _parseValue(alert.temperature);
+
+    if (ph == null && humidity == null && temperature == null) {
+      return _AlertIssue.noReading;
+    }
+    if (ph != null && ph < 5.5) {
+      return _AlertIssue.phLow;
+    }
+    if (ph != null && ph > 7.5) {
+      return _AlertIssue.phHigh;
+    }
+    if (humidity != null && humidity < 35) {
+      return _AlertIssue.humidityLow;
+    }
+    if (humidity != null && humidity > 85) {
+      return _AlertIssue.humidityHigh;
+    }
+    if (temperature != null && temperature > 35) {
+      return _AlertIssue.temperatureHigh;
+    }
+    if (temperature != null && temperature < 10) {
+      return _AlertIssue.temperatureLow;
+    }
+    return _AlertIssue.generic;
+  }
+
+  double? _parseValue(String? raw) {
+    if (raw == null) return null;
+    final normalized = raw
+        .replaceAll(',', '.')
+        .replaceAll(RegExp(r'[^0-9\.\-]'), '')
+        .trim();
+    if (normalized.isEmpty) return null;
+    return double.tryParse(normalized);
+  }
+}
+
+enum _AlertIssue {
+  noReading,
+  phLow,
+  phHigh,
+  humidityLow,
+  humidityHigh,
+  temperatureHigh,
+  temperatureLow,
+  generic,
 }
 
 class _ValuePill extends StatelessWidget {
