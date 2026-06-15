@@ -104,22 +104,6 @@ class _MonitoringPageState extends State<MonitoringPage> {
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          const SectionHeader(
-            eyebrow: 'Clima e sensores',
-            title: 'Clima e leituras de campo',
-            description:
-                'Veja a condicao externa e o que exige atencao no campo sem misturar contexto climatico com leitura de sensor.',
-            compact: true,
-          ),
-          const SizedBox(height: 20),
-          const SectionHeader(
-            eyebrow: 'Condicao externa',
-            title: 'Clima atual da area monitorada',
-            description:
-                'Base para decidir irrigacao, aplicacao e monitoramento nas proximas horas.',
-            compact: true,
-          ),
-          const SizedBox(height: 12),
           FutureBuilder<WeatherModel>(
             future: _weatherFuture,
             builder: (context, snapshot) {

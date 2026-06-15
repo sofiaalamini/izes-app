@@ -4,7 +4,6 @@ import '../../../../core/models/izes_models.dart';
 import '../../../../core/services/dashboard_service.dart';
 import '../../../../core/theme/izes_theme.dart';
 import '../../../../shared/widgets/app_surface_card.dart';
-import '../../../../shared/widgets/metric_card.dart';
 import '../../../../shared/widgets/section_header.dart';
 import '../../../../shared/widgets/status_badge.dart';
 
@@ -62,202 +61,10 @@ class _DashboardPageState extends State<DashboardPage> {
               compact: true,
             ),
             const SizedBox(height: 16),
-            AppSurfaceCard(
-              borderRadius: 18,
-              padding: const EdgeInsets.all(18),
-              backgroundColor: IzesColors.surface,
-              borderColor: IzesColors.line,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    crossAxisAlignment: WrapCrossAlignment.center,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: IzesColors.greenSoft,
-                          borderRadius: BorderRadius.circular(999),
-                        ),
-                        child: Text(
-                          'Painel de hoje',
-                          style: Theme.of(context).textTheme.labelMedium
-                              ?.copyWith(color: IzesColors.greenDark),
-                        ),
-                      ),
-                      Text(
-                        data.updatedAtLabel,
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    _heroHeadline(summary),
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    _heroSupport(summary),
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
-                  const SizedBox(height: 14),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      _MiniPill(
-                        label: '${summary.urgentCount} urgentes',
-                        foreground: IzesColors.urgent,
-                        background: IzesColors.urgentSoft,
-                      ),
-                      _MiniPill(
-                        label: '${summary.attentionCount} em observacao',
-                        foreground: IzesColors.attention,
-                        background: IzesColors.attentionSoft,
-                      ),
-                      _MiniPill(
-                        label: '${summary.okCount} estaveis',
-                        foreground: IzesColors.green,
-                        background: IzesColors.greenSoft,
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 14),
-            LayoutBuilder(
-              builder: (context, constraints) {
-                final compact = constraints.maxWidth < 420;
-                final cardWidth = compact
-                    ? constraints.maxWidth
-                    : (constraints.maxWidth - 12) / 2;
-                return Wrap(
-                  spacing: 12,
-                  runSpacing: 12,
-                  children: [
-                    SizedBox(
-                      width: cardWidth,
-                      child: MetricCard(
-                        label: 'Acao imediata',
-                        value: _countText(
-                          summary.urgentCount,
-                          'sensor',
-                          'sensores',
-                        ),
-                        note: summary.urgentCount > 0
-                            ? 'Verificar agora os pontos mais criticos'
-                            : 'Nenhum sensor precisa de acao imediata',
-                        tint: IzesColors.urgentSoft,
-                        accentColor: IzesColors.urgent,
-                      ),
-                    ),
-                    SizedBox(
-                      width: cardWidth,
-                      child: MetricCard(
-                        label: 'Em observacao',
-                        value: _countText(
-                          summary.attentionCount,
-                          'sensor',
-                          'sensores',
-                        ),
-                        note: summary.attentionCount > 0
-                            ? 'Monitorar nas proximas horas'
-                            : 'Sem risco moderado no momento',
-                        tint: IzesColors.attentionSoft,
-                        accentColor: IzesColors.attention,
-                      ),
-                    ),
-                    SizedBox(
-                      width: cardWidth,
-                      child: MetricCard(
-                        label: 'Operacao estavel',
-                        value: _countText(
-                          summary.okCount,
-                          'sensor',
-                          'sensores',
-                        ),
-                        note: 'Sem alerta ativo nesta ultima leitura',
-                        tint: IzesColors.greenSoft,
-                        accentColor: IzesColors.green,
-                      ),
-                    ),
-                    SizedBox(
-                      width: cardWidth,
-                      child: MetricCard(
-                        label: 'Sensores ativos',
-                        value: _countText(
-                          summary.sensorCount,
-                          'sensor',
-                          'sensores',
-                        ),
-                        note: 'Monitoramento em tempo real',
-                        accentColor: IzesColors.earth,
-                      ),
-                    ),
-                  ],
-                );
-              },
-            ),
-            const SizedBox(height: 16),
-            LayoutBuilder(
-              builder: (context, constraints) {
-                final vertical = constraints.maxWidth < 360;
-                if (vertical) {
-                  return Column(
-                    children: [
-                      _OverviewInfoCard(
-                        title: 'Resumo do dia',
-                        body: _summaryLine(summary),
-                      ),
-                      const SizedBox(height: 12),
-                      _OverviewInfoCard(
-                        title: 'Campo',
-                        highlight: _countText(
-                          summary.sensorCount,
-                          'sensor ativo',
-                          'sensores ativos',
-                        ),
-                        body:
-                            'Ultima leitura recente e acompanhamento continuo do campo.',
-                      ),
-                    ],
-                  );
-                }
-
-                return IntrinsicHeight(
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Expanded(
-                        child: _OverviewInfoCard(
-                          title: 'Resumo do dia',
-                          body: _summaryLine(summary),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: _OverviewInfoCard(
-                          title: 'Campo',
-                          highlight: _countText(
-                            summary.sensorCount,
-                            'sensor ativo',
-                            'sensores ativos',
-                          ),
-                          body:
-                              'Ultima leitura recente e acompanhamento continuo do campo.',
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              },
+            _OverviewInfoCard(
+              title: 'Resumo do dia',
+              body: _summaryLine(summary),
+              highlight: data.updatedAtLabel,
             ),
             const SizedBox(height: 16),
             AppSurfaceCard(
@@ -393,26 +200,6 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
-  String _heroHeadline(DashboardSummary summary) {
-    if (summary.urgentCount > 0) {
-      return '${_countText(summary.urgentCount, 'sensor precisa', 'sensores precisam')} de atencao imediata.';
-    }
-    if (summary.attentionCount > 0) {
-      return '${_countText(summary.attentionCount, 'sensor pede', 'sensores pedem')} acompanhamento nas proximas horas.';
-    }
-    return 'Operacao estavel neste momento.';
-  }
-
-  String _heroSupport(DashboardSummary summary) {
-    if (summary.urgentCount > 0) {
-      return 'Priorize os alertas criticos e confira a leitura mais recente dos sensores afetados.';
-    }
-    if (summary.attentionCount > 0) {
-      return 'Acompanhe os sensores em observacao e revise uma nova leitura ao longo do dia.';
-    }
-    return 'Os sensores ativos seguem sem sinal forte de criticidade.';
-  }
-
   String _summaryLine(DashboardSummary summary) {
     if (summary.urgentCount > 0) {
       return 'Comece pelos sensores criticos e valide a recomendacao de manejo antes da proxima rodada de leituras.';
@@ -421,10 +208,6 @@ class _DashboardPageState extends State<DashboardPage> {
       return 'O dia pede observacao, com foco nos sensores que podem sair do ideal nas proximas horas.';
     }
     return 'O campo segue estavel, com espaco para uma checagem rapida de rotina.';
-  }
-
-  String _countText(int count, String singular, String plural) {
-    return '$count ${count == 1 ? singular : plural}';
   }
 
   String _problemText(AlertItem alert) {
@@ -470,37 +253,6 @@ class _DashboardPageState extends State<DashboardPage> {
       case AlertLevel.ok:
         return Icons.eco_outlined;
     }
-  }
-}
-
-class _MiniPill extends StatelessWidget {
-  const _MiniPill({
-    required this.label,
-    required this.foreground,
-    required this.background,
-  });
-
-  final String label;
-  final Color foreground;
-  final Color background;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: background,
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Text(
-        label,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: Theme.of(
-          context,
-        ).textTheme.labelMedium?.copyWith(color: foreground),
-      ),
-    );
   }
 }
 
