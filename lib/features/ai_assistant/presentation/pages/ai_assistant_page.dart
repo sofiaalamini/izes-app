@@ -5,7 +5,6 @@ import 'package:image_picker/image_picker.dart';
 
 import '../../../../core/models/izes_models.dart';
 import '../../../../core/services/ai_assistant_service.dart';
-import '../../../../core/services/sensor_service.dart';
 import '../../../../core/theme/izes_theme.dart';
 import '../../../../shared/widgets/app_state_card.dart';
 import '../../../../shared/widgets/app_surface_card.dart';
@@ -19,23 +18,30 @@ class AiAssistantPage extends StatefulWidget {
 }
 
 class _AiAssistantPageState extends State<AiAssistantPage> {
+  static final List<_ChatConversation> _history = [];
+
   final AiAssistantService _assistantService = AiAssistantService();
-  final SensorService _sensorService = SensorService();
   final TextEditingController _controller = TextEditingController();
   final ImagePicker _imagePicker = ImagePicker();
-  final List<ChatMessage> _messages = const [
-    ChatMessage(
-      text:
-          'Sou o Assistente IZES. Posso resumir prioridade, irrigação, risco de praga e próximos passos.',
-      isUser: false,
-    ),
-  ].toList();
+  late final List<ChatMessage> _messages;
 
   bool _loading = false;
   String? _sensorId;
   XFile? _selectedImage;
   Uint8List? _selectedImageBytes;
   String _loadingMessage = 'Analisando sensores e clima...';
+
+  @override
+  void initState() {
+    super.initState();
+    _messages = [
+      const ChatMessage(
+        text:
+            'Sou o Assistente IZES. Posso resumir prioridade, irrigação, risco de praga e próximos passos.',
+        isUser: false,
+      ),
+    ];
+  }
 
   Future<void> _handleSend() async {
     if (_loading) return;
@@ -101,6 +107,8 @@ class _AiAssistantPageState extends State<AiAssistantPage> {
       final image = await _imagePicker.pickImage(
         source: source,
         imageQuality: 85,
+        maxWidth: 1600,
+        maxHeight: 1600,
       );
       if (image == null || !mounted) return;
       final imageBytes = await image.readAsBytes();
@@ -193,8 +201,7 @@ class _AiAssistantPageState extends State<AiAssistantPage> {
       setState(() {
         _messages.add(
           ChatMessage(
-            text:
-                'Erro ao analisar imagem. Verifique logs do console.\n${error.message}',
+            text: error.message,
             isUser: false,
           ),
         );
@@ -207,7 +214,7 @@ class _AiAssistantPageState extends State<AiAssistantPage> {
       setState(() {
         _messages.add(
           const ChatMessage(
-            text: 'Erro ao analisar imagem. Verifique logs do console.',
+            text: 'Não foi possível analisar a imagem agora. Tente novamente.',
             isUser: false,
           ),
         );
@@ -216,25 +223,84 @@ class _AiAssistantPageState extends State<AiAssistantPage> {
     }
   }
 
-  Future<String?> _resolveSensorId() async {
-    if (_sensorId != null && _sensorId!.isNotEmpty) {
-      return _sensorId;
-    }
-
-    try {
-      final sensors = await _sensorService.fetchSensors();
-      if (sensors.isNotEmpty) {
-        _sensorId = sensors.first.id;
-      }
-    } catch (_) {}
-
-    return _sensorId;
-  }
+  /// Sem sensor fixo, a IA considera todas as fazendas e sensores do cliente.
+  /// Só envia sensor quando o usuário escolher um explicitamente.
+  Future<String?> _resolveSensorId() async => _sensorId;
 
   @override
   void dispose() {
+    _saveCurrentConversation();
     _controller.dispose();
     super.dispose();
+  }
+
+  void _saveCurrentConversation() {
+    if (!_messages.any((message) => message.isUser)) return;
+
+    final saved = _ChatConversation(
+      createdAt: DateTime.now(),
+      messages: List<ChatMessage>.of(_messages),
+    );
+    if (_history.isNotEmpty &&
+        _history.last.messages.length == saved.messages.length) {
+      _history[_history.length - 1] = saved;
+      return;
+    }
+    _history.add(saved);
+  }
+
+  Future<void> _showHistory() async {
+    _saveCurrentConversation();
+    await showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (context) {
+        if (_history.isEmpty) {
+          return const SafeArea(
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(20, 4, 20, 28),
+              child: Text('Nenhuma conversa salva ainda.'),
+            ),
+          );
+        }
+
+        return SafeArea(
+          child: ListView(
+            shrinkWrap: true,
+            padding: const EdgeInsets.fromLTRB(12, 0, 12, 20),
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(8, 4, 8, 10),
+                child: Text(
+                  'Histórico de conversas',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+              ),
+              ..._history.reversed.map(
+                (conversation) => ListTile(
+                  leading: const CircleAvatar(
+                    backgroundColor: IzesColors.greenSoft,
+                    child: Icon(Icons.chat_bubble_outline_rounded),
+                  ),
+                  title: Text(conversation.preview),
+                  subtitle: Text(
+                    '${conversation.messages.where((message) => message.isUser).length} mensagens',
+                  ),
+                  onTap: () {
+                    Navigator.of(context).pop();
+                    setState(() {
+                      _messages
+                        ..clear()
+                        ..addAll(conversation.messages);
+                    });
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -248,12 +314,24 @@ class _AiAssistantPageState extends State<AiAssistantPage> {
           child: ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              const SectionHeader(
-                eyebrow: 'Assistente IZES',
-                title: 'Apoio rápido para decidir no campo',
-                description:
-                    'Use o assistente para resumir prioridade, risco e próximos passos sem abrir várias telas.',
-                compact: true,
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Expanded(
+                    child: SectionHeader(
+                      eyebrow: 'Assistente IZES',
+                      title: 'Apoio rápido para decidir no campo',
+                      description:
+                          'Use o assistente para resumir prioridade, risco e próximos passos sem abrir várias telas.',
+                      compact: true,
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: _showHistory,
+                    tooltip: 'Histórico de conversas',
+                    icon: const Icon(Icons.history_rounded),
+                  ),
+                ],
               ),
               const SizedBox(height: 16),
               if (!hasConversation && !_loading)
@@ -405,6 +483,7 @@ class _AiAssistantPageState extends State<AiAssistantPage> {
                       Expanded(
                         child: TextField(
                           controller: _controller,
+                          textInputAction: TextInputAction.send,
                           maxLines: 3,
                           minLines: 1,
                           decoration: const InputDecoration(
@@ -442,5 +521,21 @@ class _AiAssistantPageState extends State<AiAssistantPage> {
         ),
       ],
     );
+  }
+}
+
+class _ChatConversation {
+  const _ChatConversation({required this.createdAt, required this.messages});
+
+  final DateTime createdAt;
+  final List<ChatMessage> messages;
+
+  String get preview {
+    final userMessage = messages.firstWhere(
+      (message) => message.isUser && message.text.trim().isNotEmpty,
+      orElse: () => const ChatMessage(text: 'Análise de imagem', isUser: true),
+    );
+    final text = userMessage.text.trim();
+    return text.length > 48 ? '${text.substring(0, 48)}...' : text;
   }
 }

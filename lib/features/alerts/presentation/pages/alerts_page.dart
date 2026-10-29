@@ -115,8 +115,8 @@ class _AlertCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context).textTheme;
-    final problem = _problemText(alert);
-    final recommendation = _recommendationText(alert);
+    final problem = alert.problem ?? _problemText(alert);
+    final recommendation = alert.recommendation ?? _recommendationText(alert);
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),

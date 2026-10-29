@@ -27,6 +27,8 @@ class AlertItem {
     this.temperature,
     this.humidity,
     this.ph,
+    this.problem,
+    this.recommendation,
   });
 
   final AlertLevel level;
@@ -39,11 +41,37 @@ class AlertItem {
   final String? humidity;
   final String? ph;
 
+  /// Texto do problema vindo do motor de regras do backend, quando houver.
+  final String? problem;
+
+  /// Ação recomendada vinda do motor de regras do backend, quando houver.
+  final String? recommendation;
+
+  /// Leitura mais antiga que isso indica sensor parado/sem comunicação.
+  static const staleAfter = Duration(hours: 24);
+
+  static bool isStale(Map<String, dynamic> sensor) {
+    final reading = sensor['ultima_leitura'] as Map<String, dynamic>?;
+    final timestamp = DateTime.tryParse('${reading?['timestamp'] ?? ''}');
+    if (timestamp == null) return true;
+    return DateTime.now().toUtc().difference(timestamp.toUtc()) > staleAfter;
+  }
+
+  static List<Map<String, dynamic>> activeAlerts(Map<String, dynamic> sensor) {
+    return (sensor['alertas'] as List<dynamic>? ?? const [])
+        .whereType<Map<String, dynamic>>()
+        .toList();
+  }
+
   factory AlertItem.fromDashboardSensor(Map<String, dynamic> sensor) {
     final reading =
         sensor['ultima_leitura'] as Map<String, dynamic>? ?? const {};
-    final critical = reading['nivel_critico'] == true;
-    final active = reading['alerta_ativo'] == true;
+    final alerts = activeAlerts(sensor);
+    final stale = isStale(sensor);
+    final critical =
+        reading['nivel_critico'] == true ||
+        alerts.any((alert) => alert['severidade'] == 'critico');
+    final active = reading['alerta_ativo'] == true || alerts.isNotEmpty || stale;
     final title = '${sensor['nome'] ?? sensor['sensor_id'] ?? 'Sensor'}';
     final property = '${sensor['propriedade'] ?? ''}'.trim();
     final city = '${sensor['municipio'] ?? ''}'.trim();
@@ -81,7 +109,32 @@ class AlertItem {
           : '${reading['temperatura']} C',
       humidity: reading['umidade'] == null ? null : '${reading['umidade']}%',
       ph: reading['ph'] == null ? null : '${reading['ph']}',
+      problem: stale
+          ? _staleProblem(reading['timestamp'])
+          : alerts.isEmpty
+          ? null
+          : '${alerts.first['titulo'] ?? ''}. ${alerts.first['mensagem'] ?? ''}'
+                .trim(),
+      recommendation: stale
+          ? 'Verifique conexão, energia ou bateria do sensor no campo.'
+          : alerts.isEmpty
+          ? null
+          : [
+              '${alerts.first['recomendacao'] ?? ''}'.trim(),
+              if (alerts.length > 1)
+                '+${alerts.length - 1} alerta(s) neste sensor.',
+            ].where((text) => text.isNotEmpty).join(' • '),
     );
+  }
+
+  static String _staleProblem(dynamic timestamp) {
+    final parsed = DateTime.tryParse('${timestamp ?? ''}');
+    if (parsed == null) {
+      return 'Sensor instalado, mas ainda não enviou nenhuma leitura.';
+    }
+    final hours = DateTime.now().toUtc().difference(parsed.toUtc()).inHours;
+    final since = hours >= 48 ? '${hours ~/ 24} dias' : '$hours horas';
+    return 'Sem comunicação: última leitura há $since.';
   }
 
   factory AlertItem.fromApiAlertas(Map<String, dynamic> json) {

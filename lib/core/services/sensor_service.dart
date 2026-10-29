@@ -1,3 +1,4 @@
+import '../models/izes_models.dart';
 import '../models/sensor_model.dart';
 import '../utils/date_time_formatter.dart';
 import 'api_client.dart';
@@ -19,6 +20,7 @@ class SensorService {
     final data = await _apiClient.getJson(
       '/api/dashboard/cliente/$clientId/sensores',
       useAppToken: true,
+      debugLabel: 'Sensores',
     );
     final sensors = (data['sensores'] as List<dynamic>? ?? const [])
         .whereType<Map<String, dynamic>>()
@@ -36,7 +38,7 @@ class SensorService {
     final property = '${sensor['propriedade'] ?? 'Propriedade'}';
     final city = '${sensor['municipio'] ?? 'Município'}';
     final state = '${sensor['estado'] ?? 'UF'}';
-    final hasReading = reading['timestamp'] != null;
+    final hasReading = !AlertItem.isStale(sensor);
 
     final facts = <SensorFact>[
       if (humidity != null)
@@ -54,7 +56,9 @@ class SensorService {
       label: '${sensor['nome'] ?? sensor['sensor_id'] ?? 'Sensor'}',
       status: _statusFromReading(
         hasReading: hasReading,
-        alertActive: reading['alerta_ativo'] == true,
+        alertActive:
+            reading['alerta_ativo'] == true ||
+            AlertItem.activeAlerts(sensor).isNotEmpty,
         critical: reading['nivel_critico'] == true,
       ),
       lastReading: _parseDateTime(reading['timestamp']),

@@ -92,7 +92,8 @@ class AiAssistantService {
     try {
       final fields = <String, String>{
         'cliente_id': clientId,
-        'mensagem': _buildImageAnalysisPrompt(message),
+        if (message != null && message.trim().isNotEmpty)
+          'mensagem': message.trim(),
       };
       if (sensorId != null && sensorId.trim().isNotEmpty) {
         fields['sensor_id'] = sensorId.trim();
@@ -124,6 +125,16 @@ class AiAssistantService {
       throw ApiException('Resposta do backend sem o campo "resposta": $data');
     } on ApiException catch (error) {
       debugPrint('IA image error: $error');
+      if (error.message.contains('OPENAI_API_KEY')) {
+        throw const AiAssistantException(
+          'A análise de imagem ainda não está ativa: configure OPENAI_API_KEY no backend.',
+        );
+      }
+      if (error.message.contains('HTTP 413')) {
+        throw const AiAssistantException(
+          'A imagem é muito grande. Tente uma foto com menor resolução.',
+        );
+      }
       if (error.message.contains('HTTP 401')) {
         throw const AiAssistantException(
           'Sua sessão expirou ou o token do app está inválido.',
@@ -135,37 +146,6 @@ class AiAssistantService {
       debugPrintStack(stackTrace: stackTrace);
       throw AiAssistantException('Erro inesperado ao analisar imagem: $error');
     }
-  }
-
-  String _buildImageAnalysisPrompt(String? userMessage) {
-    final trimmed = userMessage?.trim() ?? '';
-    final userContext = trimmed.isEmpty
-        ? ''
-        : '\n\nContexto do produtor: $trimmed';
-
-    return '''
-Analise esta imagem como um assistente agrícola para produtor rural.
-Não descreva apenas o que aparece na foto.
-Responda de forma curta, clara, prática e orientada à decisão.
-
-Use exatamente esta estrutura:
-1. Possível problema
-2. Nível de atenção
-3. O que fazer agora
-4. Observação
-
-Regras:
-- Em "Possível problema", traga uma hipótese provável com linguagem simples.
-- Em "Nível de atenção", use apenas um destes valores: Baixo, Atenção ou Urgente.
-- Em "O que fazer agora", dê ações práticas em lista curta.
-- Em "Observação", deixe claro quando a imagem não permite confirmar a causa exata.
-- Não responda apenas descrevendo a imagem.
-- Não dê diagnóstico definitivo sem certeza.
-- Não recomende produto químico específico.
-- Considere possibilidade de praga, doença foliar, deficiência nutricional, dano físico ou estresse hídrico/térmico, quando fizer sentido.
-
-Se a imagem estiver inconclusiva, ainda assim responda na estrutura acima e oriente o acompanhamento no campo.$userContext
-''';
   }
 
   MediaType _resolveImageContentType(String? fileName) {

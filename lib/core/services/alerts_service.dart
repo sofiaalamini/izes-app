@@ -23,14 +23,19 @@ class AlertsService {
       return const <AlertItem>[];
     }
 
-    return items
+    final alerts = items
         .whereType<Map<String, dynamic>>()
         .where((sensor) {
           final reading = sensor['ultima_leitura'] as Map<String, dynamic>?;
           return reading?['alerta_ativo'] == true ||
-              reading?['nivel_critico'] == true;
+              reading?['nivel_critico'] == true ||
+              AlertItem.activeAlerts(sensor).isNotEmpty ||
+              AlertItem.isStale(sensor);
         })
         .map(AlertItem.fromDashboardSensor)
         .toList();
+    // Urgentes primeiro, depois atenção.
+    alerts.sort((a, b) => a.level.index.compareTo(b.level.index));
+    return alerts;
   }
 }
