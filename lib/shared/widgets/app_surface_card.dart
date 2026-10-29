@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../core/theme/izes_theme.dart';
-
 class AppSurfaceCard extends StatelessWidget {
   const AppSurfaceCard({
     super.key,
@@ -23,12 +21,14 @@ class AppSurfaceCard extends StatelessWidget {
     return Card(
       color: backgroundColor,
       clipBehavior: Clip.antiAlias,
-      shadowColor: const Color(0x100F180E),
-      elevation: 0,
+      shadowColor: const Color(0x180F180E),
+      elevation: borderColor == null ? 1 : 0,
       margin: EdgeInsets.zero,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(borderRadius),
-        side: BorderSide(color: borderColor ?? IzesColors.line),
+        side: borderColor == null
+            ? BorderSide.none
+            : BorderSide(color: borderColor!),
       ),
       child: Padding(padding: padding, child: child),
     );

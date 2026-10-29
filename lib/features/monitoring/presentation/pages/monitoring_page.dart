@@ -197,7 +197,7 @@ class _MonitoringPageState extends State<MonitoringPage> {
                       : 'Não foi possível carregar os sensores agora.',
                   supportingText: expiredSession
                       ? 'Ao entrar de novo, as leituras de campo voltam a aparecer aqui.'
-                      : 'Tente atualizar novamente em instantes.',
+                      : _sensorErrorSupport(message),
                   actionLabel: expiredSession
                       ? 'Entrar novamente'
                       : 'Recarregar',
@@ -230,6 +230,20 @@ class _MonitoringPageState extends State<MonitoringPage> {
         ],
       ),
     );
+  }
+
+  String _sensorErrorSupport(String message) {
+    if (message.contains('SocketException') ||
+        message.contains('Connection refused')) {
+      return 'Não foi possível acessar o backend. Confirme API_BASE_URL e se o servidor está ativo.';
+    }
+    if (message.contains('HTTP 404')) {
+      return 'A rota de sensores não foi encontrada neste backend. Verifique a versão da API.';
+    }
+    if (message.contains('HTTP 401') || message.contains('HTTP 403')) {
+      return 'O backend recusou o acesso. Confira o token da aplicação e faça login novamente.';
+    }
+    return 'Tente atualizar novamente em instantes.';
   }
 }
 

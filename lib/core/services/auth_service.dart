@@ -25,13 +25,12 @@ class AuthService extends ChangeNotifier {
 
   AuthUser? get currentUser => _currentUser;
 
-  String get resolvedClientId =>
-      _currentUser?.clienteId ?? BackendConfig.clientId;
+  String get resolvedClientId {
+    final userClientId = _currentUser?.clienteId.trim() ?? '';
+    return userClientId.isNotEmpty ? userClientId : BackendConfig.clientId;
+  }
 
-  Future<void> login({
-    required String email,
-    required String password,
-  }) async {
+  Future<void> login({required String email, required String password}) async {
     final response = await _client.post(
       Uri.parse('${BackendConfig.baseUrl}/auth/login'),
       headers: const {'Content-Type': 'application/json'},

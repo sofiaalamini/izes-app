@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
@@ -21,14 +20,17 @@ class ApiClient {
     Map<String, String>? queryParameters,
     bool useAppToken = false,
     bool authenticated = false,
+    String? debugLabel,
   }) async {
+    final uri = _buildUri(path, queryParameters);
     final response = await _client.get(
-      _buildUri(path, queryParameters),
+      uri,
       headers: await _buildHeaders(
         useAppToken: useAppToken,
         authenticated: authenticated,
       ),
     );
+    _logResponse(debugLabel, uri, response);
     return _decodeMap(response);
   }
 
@@ -84,7 +86,6 @@ class ApiClient {
     String? debugLabel,
   }) async {
     final uri = _buildUri(path, queryParameters);
-    final file = File(filePath);
     final resolvedFileName = (fileName == null || fileName.trim().isEmpty)
         ? _fallbackFileName(filePath)
         : fileName.trim();
@@ -99,14 +100,13 @@ class ApiClient {
       debugPrint('$debugLabel fileContentType: $resolvedContentType');
     }
 
-    final fileExists = await file.exists();
-    if (!fileExists && fileBytes.isEmpty) {
+    if (fileBytes.isEmpty) {
       throw ApiException(
-        'Arquivo de imagem não encontrado para upload: $filePath',
+        'Não foi possível ler a imagem selecionada para upload.',
       );
     }
     if (debugLabel != null && debugLabel.isNotEmpty) {
-      debugPrint('$debugLabel fileExistsOnDisk: $fileExists');
+      debugPrint('$debugLabel fileReadyFromBytes: ${fileBytes.isNotEmpty}');
     }
 
     final request = http.MultipartRequest('POST', uri);

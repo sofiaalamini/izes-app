@@ -1,6 +1,13 @@
 # Instruções fixas para o Codex
 
+## Karen
+
+Use o sistema operacional e o roteador em:
+
+`C:\Users\sofia\OneDrive\Documents\Karen\_KAREN`
+
 Antes de qualquer tarefa, consulte o vault Karen/Obsidian como memória do projeto.
+Use o workflow em `C:\Users\sofia\OneDrive\Documents\Karen\_KAREN\WORKFLOWS\DEVELOPMENT.md`.
 
 Vault:
 C:\Users\sofia\OneDrive\Documents\Karen

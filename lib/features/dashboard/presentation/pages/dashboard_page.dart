@@ -54,123 +54,177 @@ class _DashboardPageState extends State<DashboardPage> {
 
         final summary = data.summary;
         final actions = data.alerts.take(3).toList();
-        return ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            const SectionHeader(
-              eyebrow: 'dashboard',
-              title: 'Visão geral do campo',
-              description:
-                  'Prioridades, leituras recentes e o pulso atual da operação.',
-              compact: true,
-            ),
-            const SizedBox(height: 16),
-            AppSurfaceCard(
-              borderRadius: 18,
-              padding: const EdgeInsets.all(18),
-              backgroundColor: IzesColors.surface,
-              borderColor: IzesColors.line,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    crossAxisAlignment: WrapCrossAlignment.center,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: IzesColors.greenSoft,
-                          borderRadius: BorderRadius.circular(999),
-                        ),
-                        child: Text(
-                          'Painel de hoje',
-                          style: Theme.of(context).textTheme.labelMedium
-                              ?.copyWith(color: IzesColors.greenDark),
-                        ),
-                      ),
-                      Text(
-                        data.updatedAtLabel,
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    _heroHeadline(summary),
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    _heroSupport(summary),
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
-                  const SizedBox(height: 14),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      _MiniPill(
-                        label: '${summary.urgentCount} urgentes',
-                        foreground: IzesColors.urgent,
-                        background: IzesColors.urgentSoft,
-                      ),
-                      _MiniPill(
-                        label: '${summary.attentionCount} em observação',
-                        foreground: IzesColors.observation,
-                        background: IzesColors.observationSoft,
-                      ),
-                      _MiniPill(
-                        label: '${summary.okCount} estáveis',
-                        foreground: IzesColors.green,
-                        background: IzesColors.greenSoft,
-                      ),
-                    ],
-                  ),
-                ],
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            final horizontalPadding = constraints.maxWidth > 720 ? 24.0 : 16.0;
+            return ListView(
+              padding: EdgeInsets.fromLTRB(
+                horizontalPadding,
+                18,
+                horizontalPadding,
+                24,
               ),
-            ),
-            const SizedBox(height: 16),
-            _OverviewInfoCard(
-              title: 'Resumo do dia',
-              body: _summaryLine(summary),
-              highlight: data.updatedAtLabel,
-            ),
-            const SizedBox(height: 16),
-            AppSurfaceCard(
-              borderRadius: 16,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          'Ações prioritárias',
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
+              children: [
+                Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 1180),
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          const SectionHeader(
+                            eyebrow: 'dashboard',
+                            title: 'Visão geral do campo',
+                            description:
+                                'Prioridades, leituras recentes e o pulso atual da operação.',
+                            compact: true,
+                          ),
+                          const SizedBox(height: 18),
+                          AppSurfaceCard(
+                            borderRadius: 22,
+                            padding: const EdgeInsets.all(20),
+                            backgroundColor: IzesColors.greenDark,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Wrap(
+                                  spacing: 8,
+                                  runSpacing: 8,
+                                  crossAxisAlignment: WrapCrossAlignment.center,
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 10,
+                                        vertical: 6,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: IzesColors.surface.withValues(
+                                          alpha: 0.14,
+                                        ),
+                                        borderRadius: BorderRadius.circular(
+                                          999,
+                                        ),
+                                      ),
+                                      child: Text(
+                                        'Painel de hoje',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .labelMedium
+                                            ?.copyWith(
+                                              color: IzesColors.surface,
+                                            ),
+                                      ),
+                                    ),
+                                    Text(
+                                      data.updatedAtLabel,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodySmall
+                                          ?.copyWith(
+                                            color: IzesColors.surface
+                                                .withValues(alpha: 0.72),
+                                          ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  _heroHeadline(summary),
+                                  style: Theme.of(context).textTheme.titleLarge
+                                      ?.copyWith(color: IzesColors.surface),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  _heroSupport(summary),
+                                  style: Theme.of(context).textTheme.bodyMedium
+                                      ?.copyWith(
+                                        color: IzesColors.surface.withValues(
+                                          alpha: 0.78,
+                                        ),
+                                      ),
+                                ),
+                                const SizedBox(height: 14),
+                                Wrap(
+                                  spacing: 8,
+                                  runSpacing: 8,
+                                  children: [
+                                    _MiniPill(
+                                      label: '${summary.urgentCount} urgentes',
+                                      foreground: IzesColors.surface,
+                                      background: IzesColors.urgent.withValues(
+                                        alpha: 0.8,
+                                      ),
+                                    ),
+                                    _MiniPill(
+                                      label:
+                                          '${summary.attentionCount} em observação',
+                                      foreground: IzesColors.surface,
+                                      background: IzesColors.observation
+                                          .withValues(alpha: 0.8),
+                                    ),
+                                    _MiniPill(
+                                      label: '${summary.okCount} estáveis',
+                                      foreground: IzesColors.surface,
+                                      background: IzesColors.surface.withValues(
+                                        alpha: 0.14,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 18),
+                          _OverviewInfoCard(
+                            title: 'Resumo do dia',
+                            body: _summaryLine(summary),
+                            highlight: data.updatedAtLabel,
+                          ),
+                          const SizedBox(height: 18),
+                          AppSurfaceCard(
+                            borderRadius: 16,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        'Ações prioritárias',
+                                        style: Theme.of(
+                                          context,
+                                        ).textTheme.titleMedium,
+                                      ),
+                                    ),
+                                    Text(
+                                      '${actions.length} itens',
+                                      style: Theme.of(
+                                        context,
+                                      ).textTheme.bodySmall,
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 10),
+                                if (actions.isEmpty)
+                                  Text(
+                                    'Nenhuma ação crítica no momento.',
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.bodyMedium,
+                                  ),
+                                ...actions.map(_buildAlertRow),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
-                      Text(
-                        '${actions.length} itens',
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-                  if (actions.isEmpty)
-                    Text(
-                      'Nenhuma ação crítica no momento.',
-                      style: Theme.of(context).textTheme.bodyMedium,
                     ),
-                  ...actions.map(_buildAlertRow),
-                ],
-              ),
-            ),
-          ],
+                  ),
+                ),
+              ],
+            );
+          },
         );
       },
     );

@@ -93,15 +93,15 @@ class IzesTheme {
         elevation: 0,
         scrolledUnderElevation: 0,
         centerTitle: false,
-        toolbarHeight: 64,
+        toolbarHeight: 70,
       ),
       cardTheme: CardThemeData(
         color: IzesColors.surface,
         elevation: 0,
         shadowColor: const Color(0x33203321),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: const BorderSide(color: IzesColors.line),
+          borderRadius: BorderRadius.circular(18),
+          side: BorderSide.none,
         ),
       ),
       filledButtonTheme: FilledButtonThemeData(
@@ -113,10 +113,7 @@ class IzesTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(14),
           ),
-          textStyle: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w700,
-          ),
+          textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
@@ -127,10 +124,7 @@ class IzesTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(14),
           ),
-          textStyle: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-          ),
+          textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
         ),
       ),
       textButtonTheme: TextButtonThemeData(
@@ -144,8 +138,11 @@ class IzesTheme {
         surfaceTintColor: Colors.transparent,
         shadowColor: const Color(0x1A2E6840),
         elevation: 0,
-        height: 66,
+        height: 72,
         indicatorColor: IzesColors.surfaceAlt,
+        indicatorShape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
         labelTextStyle: WidgetStateProperty.resolveWith(
           (states) => TextStyle(
             fontSize: 10.5,

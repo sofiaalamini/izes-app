@@ -82,22 +82,25 @@ class _IzesHomePageState extends State<IzesHomePage> {
         ),
         actions: [
           Padding(
-            padding: const EdgeInsets.only(right: 4),
+            padding: const EdgeInsets.only(right: 2),
             child: Center(
               child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 6,
-                ),
+                height: 34,
+                width: 34,
                 decoration: BoxDecoration(
                   color: IzesColors.surfaceSoft,
-                  borderRadius: BorderRadius.circular(999),
+                  shape: BoxShape.circle,
                   border: Border.all(color: IzesColors.line),
                 ),
-                child: Text(
-                  userLabel.split(' ').first,
-                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                    color: IzesColors.greenDark,
+                child: Center(
+                  child: Text(
+                    userLabel.trim().isEmpty
+                        ? 'I'
+                        : userLabel.trim().substring(0, 1).toUpperCase(),
+                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                      color: IzesColors.greenDark,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
               ),
