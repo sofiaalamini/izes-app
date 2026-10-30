@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/services/auth_service.dart';
 import '../../../../core/theme/izes_theme.dart';
+import '../../../../shared/widgets/offline_banner.dart';
 import '../../../ai_assistant/presentation/pages/ai_assistant_page.dart';
 import '../../../alerts/presentation/pages/alerts_page.dart';
 import '../../../dashboard/presentation/pages/dashboard_page.dart';
@@ -153,7 +154,12 @@ class _IzesHomePageState extends State<IzesHomePage> {
           ),
         ),
       ),
-      body: _pageForSection(_section),
+      body: Column(
+        children: [
+          const OfflineBanner(),
+          Expanded(child: _pageForSection(_section)),
+        ],
+      ),
       bottomNavigationBar: DecoratedBox(
         decoration: const BoxDecoration(
           color: IzesColors.surface,

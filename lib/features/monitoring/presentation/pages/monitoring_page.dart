@@ -89,6 +89,7 @@ class _MonitoringPageState extends State<MonitoringPage> {
         normalized.contains('unauthorized') ||
         normalized.contains('token') ||
         normalized.contains('sessao') ||
+        normalized.contains('sessão') ||
         normalized.contains('session');
   }
 

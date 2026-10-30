@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../../../../core/models/izes_models.dart';
 import '../../../../core/services/dashboard_service.dart';
 import '../../../../core/theme/izes_theme.dart';
+import '../../../../core/utils/error_message.dart';
+import '../../../../shared/widgets/app_state_card.dart';
 import '../../../../shared/widgets/app_surface_card.dart';
 import '../../../../shared/widgets/section_header.dart';
 import '../../../../shared/widgets/status_badge.dart';
@@ -40,7 +42,10 @@ class _DashboardPageState extends State<DashboardPage> {
 
         if (snapshot.hasError) {
           return _DashboardStateCard(
-            message: 'Não foi possível atualizar o resumo agora.',
+            message: mensagemDeErro(
+              snapshot.error,
+              padrao: 'Não foi possível atualizar o resumo agora.',
+            ),
             onRetry: _reload,
           );
         }
@@ -525,22 +530,11 @@ class _DashboardStateCard extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        AppSurfaceCard(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Dashboard', style: Theme.of(context).textTheme.titleLarge),
-              const SizedBox(height: 12),
-              Text(message, style: Theme.of(context).textTheme.bodyMedium),
-              if (onRetry != null) ...[
-                const SizedBox(height: 12),
-                OutlinedButton(
-                  onPressed: onRetry,
-                  child: const Text('Tentar novamente'),
-                ),
-              ],
-            ],
-          ),
+        AppStateCard(
+          title: 'Dashboard',
+          message: message,
+          actionLabel: onRetry == null ? null : 'Tentar novamente',
+          onAction: onRetry,
         ),
       ],
     );

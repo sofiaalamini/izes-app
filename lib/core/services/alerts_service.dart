@@ -16,6 +16,7 @@ class AlertsService {
     final data = await _apiClient.getJson(
       '/api/dashboard/cliente/$clientId/sensores',
       authenticated: true,
+      cacheKey: 'sensores_$clientId',
     );
 
     final items = data['sensores'];

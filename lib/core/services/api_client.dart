@@ -7,34 +7,66 @@ import 'package:http_parser/http_parser.dart';
 
 import '../config/backend_config.dart';
 import 'auth_service.dart';
+import 'cache_service.dart';
 
 class ApiClient {
-  ApiClient({http.Client? client, AuthService? authService, Duration? timeout})
-    : _client = _TimeoutClient(
-        client ?? http.Client(),
-        timeout ?? _requestTimeout,
-      ),
-      _authService = authService ?? AuthService();
+  ApiClient({
+    http.Client? client,
+    AuthService? authService,
+    CacheService? cache,
+    Duration? timeout,
+  }) : _cache = cache ?? CacheService(),
+       _client = _TimeoutClient(
+         client ?? http.Client(),
+         timeout ?? _requestTimeout,
+       ),
+       _authService = authService ?? AuthService();
 
   /// Inclui chamadas à IA, que podem levar alguns segundos no backend.
   static const _requestTimeout = Duration(seconds: 75);
 
   final http.Client _client;
   final AuthService _authService;
+  final CacheService _cache;
 
   Future<Map<String, dynamic>> getJson(
     String path, {
     Map<String, String>? queryParameters,
     bool authenticated = false,
     String? debugLabel,
+    String? cacheKey,
   }) async {
     final uri = _buildUri(path, queryParameters);
-    final response = await _client.get(
-      uri,
-      headers: await _buildHeaders(authenticated: authenticated),
-    );
-    _logResponse(debugLabel, uri, response);
-    return _decodeMap(response);
+    try {
+      final response = await _client.get(
+        uri,
+        headers: await _buildHeaders(authenticated: authenticated),
+      );
+      _logResponse(debugLabel, uri, response);
+      final data = _decodeMap(response);
+      if (cacheKey != null) {
+        await _cache.save(cacheKey, data);
+        _cache.markOnline();
+      }
+      return data;
+    } catch (error) {
+      // Sem conexão (ou servidor fora do ar): mostra a última resposta salva.
+      final saved = cacheKey != null && _isConnectionProblem(error)
+          ? await _cache.read(cacheKey)
+          : null;
+      if (saved == null) rethrow;
+      _cache.markOffline(saved.savedAt);
+      return saved.data;
+    }
+  }
+
+  bool _isConnectionProblem(Object error) {
+    if (error is http.ClientException) return true;
+    if (error is! ApiException) return false;
+    return error.semConexao ||
+        error.statusCode == 502 ||
+        error.statusCode == 503 ||
+        error.statusCode == 504;
   }
 
   Future<List<dynamic>> getJsonList(
@@ -246,7 +278,12 @@ class ApiClient {
 }
 
 class ApiException implements Exception {
-  const ApiException(this.message, {this.statusCode, this.detail});
+  const ApiException(
+    this.message, {
+    this.statusCode,
+    this.detail,
+    this.semConexao = false,
+  });
 
   /// Texto técnico (inclui o status HTTP); use [friendlyMessage] na interface.
   final String message;
@@ -254,6 +291,9 @@ class ApiException implements Exception {
 
   /// Campo `detail` da resposta do backend, quando houver.
   final String? detail;
+
+  /// Verdadeiro quando não houve resposta do servidor (timeout, rede caída).
+  final bool semConexao;
 
   /// Mensagem em português pronta para mostrar ao usuário.
   String get friendlyMessage {
@@ -297,6 +337,7 @@ class _TimeoutClient extends http.BaseClient {
           _timeout,
           onTimeout: () => throw const ApiException(
             'A conexão demorou demais. Verifique sua internet e tente novamente.',
+            semConexao: true,
           ),
         );
   }

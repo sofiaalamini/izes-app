@@ -35,6 +35,7 @@ class DashboardService {
     final sensorsData = await _apiClient.getJson(
       '/api/dashboard/cliente/$clientId/sensores',
       authenticated: true,
+      cacheKey: 'sensores_$clientId',
     );
     List<AlertItem> alerts;
     try {
@@ -47,8 +48,9 @@ class DashboardService {
         .whereType<Map<String, dynamic>>()
         .toList();
 
-    final urgentCount =
-        alerts.where((alert) => alert.level == AlertLevel.urgent).length;
+    final urgentCount = alerts
+        .where((alert) => alert.level == AlertLevel.urgent)
+        .length;
     final attentionCount = alerts
         .where((alert) => alert.level == AlertLevel.attention)
         .length;

@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../../../../core/models/izes_models.dart';
 import '../../../../core/services/alerts_service.dart';
 import '../../../../core/theme/izes_theme.dart';
+import '../../../../core/utils/error_message.dart';
+import '../../../../shared/widgets/app_state_card.dart';
 import '../../../../shared/widgets/app_surface_card.dart';
 import '../../../../shared/widgets/section_header.dart';
 import '../../../../shared/widgets/status_badge.dart';
@@ -42,20 +44,26 @@ class _AlertsPageState extends State<AlertsPage> {
             ),
             const SizedBox(height: 14),
             if (snapshot.connectionState == ConnectionState.waiting)
-              const _InlineState(
+              const AppStateCard(
+                title: 'Alertas',
                 message: 'Carregando alertas...',
                 loading: true,
               ),
             if (snapshot.hasError)
-              _InlineState(
-                message: 'Não foi possível atualizar os alertas agora.',
+              AppStateCard(
+                title: 'Alertas',
+                message: mensagemDeErro(
+                  snapshot.error,
+                  padrao: 'Não foi possível atualizar os alertas agora.',
+                ),
                 actionLabel: 'Tentar novamente',
                 onAction: _reload,
               ),
             if (!snapshot.hasError &&
                 snapshot.connectionState != ConnectionState.waiting) ...[
               if ((snapshot.data ?? const <AlertItem>[]).isEmpty)
-                const _InlineState(
+                const AppStateCard(
+                  title: 'Tudo certo',
                   message: 'Nenhum alerta importante no momento.',
                 ),
               ...(snapshot.data ?? const <AlertItem>[]).map(
@@ -341,44 +349,6 @@ class _ValuePill extends StatelessWidget {
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _InlineState extends StatelessWidget {
-  const _InlineState({
-    required this.message,
-    this.loading = false,
-    this.actionLabel,
-    this.onAction,
-  });
-
-  final String message;
-  final bool loading;
-  final String? actionLabel;
-  final VoidCallback? onAction;
-
-  @override
-  Widget build(BuildContext context) {
-    return AppSurfaceCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (loading) ...[
-            const SizedBox(
-              height: 18,
-              width: 18,
-              child: CircularProgressIndicator(strokeWidth: 2.2),
-            ),
-            const SizedBox(height: 12),
-          ],
-          Text(message, style: Theme.of(context).textTheme.bodyMedium),
-          if (actionLabel != null && onAction != null) ...[
-            const SizedBox(height: 12),
-            OutlinedButton(onPressed: onAction, child: Text(actionLabel!)),
-          ],
-        ],
       ),
     );
   }
