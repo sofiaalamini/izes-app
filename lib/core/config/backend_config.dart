@@ -35,17 +35,5 @@ class BackendConfig {
 
   static String get clientId => dotenv.env['API_CLIENT_ID']?.trim() ?? '';
 
-  static String get appToken => dotenv.env['API_APP_TOKEN']?.trim() ?? '';
-
-  static String get authEmail => dotenv.env['API_AUTH_EMAIL']?.trim() ?? '';
-
-  static String get authPassword =>
-      dotenv.env['API_AUTH_PASSWORD']?.trim() ?? '';
-
   static bool get hasClientId => clientId.isNotEmpty;
-
-  static bool get hasAppToken => appToken.isNotEmpty;
-
-  static bool get hasAuthCredentials =>
-      authEmail.isNotEmpty && authPassword.isNotEmpty;
 }

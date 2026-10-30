@@ -15,7 +15,7 @@ class AlertsService {
 
     final data = await _apiClient.getJson(
       '/api/dashboard/cliente/$clientId/sensores',
-      useAppToken: true,
+      authenticated: true,
     );
 
     final items = data['sensores'];

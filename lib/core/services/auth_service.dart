@@ -91,46 +91,11 @@ class AuthService extends ChangeNotifier {
   }
 
   Future<String> getAccessToken() async {
-    if (_accessToken != null && _accessToken!.isNotEmpty) {
-      return _accessToken!;
+    final token = _accessToken;
+    if (token != null && token.isNotEmpty) {
+      return token;
     }
-
-    if (!BackendConfig.hasAuthCredentials) {
-      throw const AuthException(
-        'API_AUTH_EMAIL e API_AUTH_PASSWORD não configurados no .env.',
-      );
-    }
-
-    final response = await _client.post(
-      Uri.parse('${BackendConfig.baseUrl}/auth/login'),
-      headers: const {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'email': BackendConfig.authEmail,
-        'password': BackendConfig.authPassword,
-      }),
-    );
-
-    if (response.statusCode < 200 || response.statusCode >= 300) {
-      throw AuthException(
-        _extractMessage(
-          response,
-          fallback: 'Não foi possível iniciar sua sessão.',
-        ),
-      );
-    }
-
-    final data = jsonDecode(response.body) as Map<String, dynamic>;
-    final token = '${data['access_token'] ?? ''}'.trim();
-    if (token.isEmpty) {
-      throw const AuthException('Backend não retornou access_token.');
-    }
-
-    _accessToken = token;
-    final userJson = data['user'] as Map<String, dynamic>?;
-    if (userJson != null) {
-      _currentUser = AuthUser.fromJson(userJson);
-    }
-    return token;
+    throw const AuthException('Sua sessão expirou. Entre novamente.');
   }
 
   String _extractMessage(http.Response response, {required String fallback}) {

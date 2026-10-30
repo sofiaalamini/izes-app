@@ -1,7 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:http_parser/http_parser.dart';
 
-import '../config/backend_config.dart';
 import 'api_client.dart';
 import 'auth_service.dart';
 
@@ -18,11 +17,6 @@ class AiAssistantService {
         'Cliente não configurado para usar o assistente.',
       );
     }
-    if (!BackendConfig.hasAppToken) {
-      throw const AiAssistantException(
-        'API_APP_TOKEN não configurado no .env.',
-      );
-    }
 
     try {
       final queryParameters = <String, String>{
@@ -35,7 +29,7 @@ class AiAssistantService {
 
       final data = await _apiClient.postJson(
         '/api/ia/chat',
-        useAppToken: true,
+        authenticated: true,
         queryParameters: queryParameters,
         debugLabel: 'IA chat',
       );
@@ -53,13 +47,10 @@ class AiAssistantService {
       return 'Não consegui gerar uma resposta agora.';
     } on ApiException catch (error) {
       debugPrint('IA chat error: $error');
-      if (error.message.contains('HTTP 401')) {
-        throw const AiAssistantException(
-          'Sua sessão expirou ou o token do app está inválido.',
-        );
-      }
-      throw const AiAssistantException(
-        'Não foi possível consultar a IA agora.',
+      throw AiAssistantException(
+        error.statusCode == null || error.statusCode! >= 500
+            ? 'Não foi possível consultar a IA agora.'
+            : error.friendlyMessage,
       );
     } catch (error, stackTrace) {
       debugPrint('IA chat unexpected error: $error');
@@ -83,11 +74,6 @@ class AiAssistantService {
         'Cliente não configurado para usar o assistente.',
       );
     }
-    if (!BackendConfig.hasAppToken) {
-      throw const AiAssistantException(
-        'API_APP_TOKEN não configurado no .env.',
-      );
-    }
 
     try {
       final fields = <String, String>{
@@ -107,7 +93,7 @@ class AiAssistantService {
 
       final data = await _apiClient.postMultipart(
         '/api/ia/analisar-imagem',
-        useAppToken: true,
+        authenticated: true,
         fields: fields,
         fileField: 'imagem',
         filePath: imagePath,
@@ -125,26 +111,18 @@ class AiAssistantService {
       throw ApiException('Resposta do backend sem o campo "resposta": $data');
     } on ApiException catch (error) {
       debugPrint('IA image error: $error');
-      if (error.message.contains('OPENAI_API_KEY')) {
+      if (error.statusCode == 503) {
         throw const AiAssistantException(
-          'A análise de imagem ainda não está ativa: configure OPENAI_API_KEY no backend.',
+          'A análise de imagem não está disponível no momento.',
         );
       }
-      if (error.message.contains('HTTP 413')) {
-        throw const AiAssistantException(
-          'A imagem é muito grande. Tente uma foto com menor resolução.',
-        );
-      }
-      if (error.message.contains('HTTP 401')) {
-        throw const AiAssistantException(
-          'Sua sessão expirou ou o token do app está inválido.',
-        );
-      }
-      throw AiAssistantException(error.message);
+      throw AiAssistantException(error.friendlyMessage);
     } catch (error, stackTrace) {
       debugPrint('IA image unexpected error: $error');
       debugPrintStack(stackTrace: stackTrace);
-      throw AiAssistantException('Erro inesperado ao analisar imagem: $error');
+      throw const AiAssistantException(
+        'Não foi possível analisar a imagem agora. Tente novamente.',
+      );
     }
   }
 

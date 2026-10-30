@@ -241,7 +241,7 @@ class _MonitoringPageState extends State<MonitoringPage> {
       return 'A rota de sensores não foi encontrada neste backend. Verifique a versão da API.';
     }
     if (message.contains('HTTP 401') || message.contains('HTTP 403')) {
-      return 'O backend recusou o acesso. Confira o token da aplicação e faça login novamente.';
+      return 'O backend recusou o acesso. Faça login novamente.';
     }
     return 'Tente atualizar novamente em instantes.';
   }

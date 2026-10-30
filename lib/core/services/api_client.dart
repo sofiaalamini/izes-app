@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
@@ -8,9 +9,15 @@ import '../config/backend_config.dart';
 import 'auth_service.dart';
 
 class ApiClient {
-  ApiClient({http.Client? client, AuthService? authService})
-    : _client = client ?? http.Client(),
+  ApiClient({http.Client? client, AuthService? authService, Duration? timeout})
+    : _client = _TimeoutClient(
+        client ?? http.Client(),
+        timeout ?? _requestTimeout,
+      ),
       _authService = authService ?? AuthService();
+
+  /// Inclui chamadas à IA, que podem levar alguns segundos no backend.
+  static const _requestTimeout = Duration(seconds: 75);
 
   final http.Client _client;
   final AuthService _authService;
@@ -18,17 +25,13 @@ class ApiClient {
   Future<Map<String, dynamic>> getJson(
     String path, {
     Map<String, String>? queryParameters,
-    bool useAppToken = false,
     bool authenticated = false,
     String? debugLabel,
   }) async {
     final uri = _buildUri(path, queryParameters);
     final response = await _client.get(
       uri,
-      headers: await _buildHeaders(
-        useAppToken: useAppToken,
-        authenticated: authenticated,
-      ),
+      headers: await _buildHeaders(authenticated: authenticated),
     );
     _logResponse(debugLabel, uri, response);
     return _decodeMap(response);
@@ -37,15 +40,11 @@ class ApiClient {
   Future<List<dynamic>> getJsonList(
     String path, {
     Map<String, String>? queryParameters,
-    bool useAppToken = false,
     bool authenticated = false,
   }) async {
     final response = await _client.get(
       _buildUri(path, queryParameters),
-      headers: await _buildHeaders(
-        useAppToken: useAppToken,
-        authenticated: authenticated,
-      ),
+      headers: await _buildHeaders(authenticated: authenticated),
     );
     return _decodeList(response);
   }
@@ -54,7 +53,6 @@ class ApiClient {
     String path, {
     Map<String, String>? queryParameters,
     Object? body,
-    bool useAppToken = false,
     bool authenticated = false,
     String? debugLabel,
   }) async {
@@ -62,7 +60,6 @@ class ApiClient {
     final response = await _client.post(
       uri,
       headers: await _buildHeaders(
-        useAppToken: useAppToken,
         authenticated: authenticated,
         sendJsonBody: body != null,
       ),
@@ -81,7 +78,6 @@ class ApiClient {
     required List<int> fileBytes,
     String? fileName,
     MediaType? fileContentType,
-    bool useAppToken = false,
     bool authenticated = false,
     String? debugLabel,
   }) async {
@@ -110,12 +106,7 @@ class ApiClient {
     }
 
     final request = http.MultipartRequest('POST', uri);
-    request.headers.addAll(
-      await _buildHeaders(
-        useAppToken: useAppToken,
-        authenticated: authenticated,
-      ),
-    );
+    request.headers.addAll(await _buildHeaders(authenticated: authenticated));
     if (fields != null && fields.isNotEmpty) {
       request.fields.addAll(fields);
     }
@@ -155,15 +146,10 @@ class ApiClient {
   }
 
   Future<Map<String, String>> _buildHeaders({
-    required bool useAppToken,
     required bool authenticated,
     bool sendJsonBody = false,
   }) async {
     final headers = <String, String>{'Accept': 'application/json'};
-
-    if (useAppToken && BackendConfig.hasAppToken) {
-      headers['X-App-Token'] = BackendConfig.appToken;
-    }
 
     if (authenticated) {
       headers['Authorization'] =
@@ -196,8 +182,14 @@ class ApiClient {
   dynamic _decode(http.Response response) {
     if (response.statusCode < 200 || response.statusCode >= 300) {
       final body = response.body.trim();
+      if (response.statusCode == 401) {
+        // Token ausente, inválido ou expirado: volta para a tela de login.
+        _authService.logout();
+      }
       throw ApiException(
         'HTTP ${response.statusCode}: ${body.isEmpty ? 'Não foi possível concluir sua solicitação.' : body}',
+        statusCode: response.statusCode,
+        detail: _extractDetail(body),
       );
     }
 
@@ -206,6 +198,17 @@ class ApiClient {
     }
 
     return jsonDecode(response.body);
+  }
+
+  String? _extractDetail(String body) {
+    try {
+      final decoded = jsonDecode(body);
+      if (decoded is Map<String, dynamic> && decoded['detail'] is String) {
+        final detail = (decoded['detail'] as String).trim();
+        return detail.isEmpty ? null : detail;
+      }
+    } catch (_) {}
+    return null;
   }
 
   void _logResponse(String? debugLabel, Uri uri, http.Response response) {
@@ -243,10 +246,58 @@ class ApiClient {
 }
 
 class ApiException implements Exception {
-  const ApiException(this.message);
+  const ApiException(this.message, {this.statusCode, this.detail});
 
+  /// Texto técnico (inclui o status HTTP); use [friendlyMessage] na interface.
   final String message;
+  final int? statusCode;
+
+  /// Campo `detail` da resposta do backend, quando houver.
+  final String? detail;
+
+  /// Mensagem em português pronta para mostrar ao usuário.
+  String get friendlyMessage {
+    switch (statusCode) {
+      case 401:
+        return 'Sua sessão expirou. Entre novamente.';
+      case 403:
+        return 'Você não tem acesso a este recurso.';
+      case 404:
+        return 'Não encontramos o que você pediu.';
+      case 413:
+        return 'O arquivo é muito grande. Tente uma foto com menor resolução.';
+      case 429:
+        return 'Muitas solicitações em pouco tempo. Aguarde um instante e tente de novo.';
+    }
+    final code = statusCode;
+    if (code != null && code >= 400 && code < 500 && detail != null) {
+      return detail!;
+    }
+    if (code != null && code >= 500) {
+      return 'O servidor está indisponível no momento. Tente novamente em instantes.';
+    }
+    return message;
+  }
 
   @override
   String toString() => message;
+}
+
+class _TimeoutClient extends http.BaseClient {
+  _TimeoutClient(this._inner, this._timeout);
+
+  final http.Client _inner;
+  final Duration _timeout;
+
+  @override
+  Future<http.StreamedResponse> send(http.BaseRequest request) {
+    return _inner
+        .send(request)
+        .timeout(
+          _timeout,
+          onTimeout: () => throw const ApiException(
+            'A conexão demorou demais. Verifique sua internet e tente novamente.',
+          ),
+        );
+  }
 }

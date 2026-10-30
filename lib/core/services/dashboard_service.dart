@@ -34,7 +34,7 @@ class DashboardService {
 
     final sensorsData = await _apiClient.getJson(
       '/api/dashboard/cliente/$clientId/sensores',
-      useAppToken: true,
+      authenticated: true,
     );
     List<AlertItem> alerts;
     try {

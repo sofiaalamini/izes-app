@@ -45,6 +45,7 @@ class WeatherService {
           'latitude': latitude.toString(),
           'longitude': longitude.toString(),
         },
+        authenticated: true,
       );
 
       final current = data['clima_atual'] as Map<String, dynamic>? ?? const {};

@@ -19,7 +19,7 @@ class SensorService {
 
     final data = await _apiClient.getJson(
       '/api/dashboard/cliente/$clientId/sensores',
-      useAppToken: true,
+      authenticated: true,
       debugLabel: 'Sensores',
     );
     final sensors = (data['sensores'] as List<dynamic>? ?? const [])
