@@ -16,7 +16,7 @@ class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
-  final _clientIdController = TextEditingController();
+  final _inviteController = TextEditingController();
   final _passwordController = TextEditingController();
   final AuthService _authService = AuthService();
 
@@ -28,7 +28,7 @@ class _LoginPageState extends State<LoginPage> {
   void dispose() {
     _nameController.dispose();
     _emailController.dispose();
-    _clientIdController.dispose();
+    _inviteController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
@@ -50,7 +50,7 @@ class _LoginPageState extends State<LoginPage> {
           nome: _nameController.text,
           email: _emailController.text,
           password: _passwordController.text,
-          clienteId: _clientIdController.text,
+          convite: _inviteController.text,
         );
       } else {
         await _authService.login(
@@ -158,17 +158,17 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                     if (_isRegisterMode) ...[
                       const SizedBox(height: 14),
-                      const _FieldLabel('Cliente'),
+                      const _FieldLabel('Código de convite'),
                       const SizedBox(height: 8),
                       TextFormField(
-                        controller: _clientIdController,
+                        controller: _inviteController,
                         textInputAction: TextInputAction.next,
                         decoration: const InputDecoration(
-                          hintText: 'Código da propriedade ou operação',
+                          hintText: 'Código recebido do administrador',
                         ),
                         validator: (value) {
                           if ((value ?? '').trim().isEmpty) {
-                            return 'Informe o cliente.';
+                            return 'Informe o código de convite.';
                           }
                           return null;
                         },

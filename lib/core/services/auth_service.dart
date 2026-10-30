@@ -59,7 +59,7 @@ class AuthService extends ChangeNotifier {
     required String nome,
     required String email,
     required String password,
-    required String clienteId,
+    required String convite,
   }) async {
     final response = await _client.post(
       Uri.parse('${BackendConfig.baseUrl}/auth/register'),
@@ -68,7 +68,7 @@ class AuthService extends ChangeNotifier {
         'nome': nome.trim(),
         'email': email.trim(),
         'password': password,
-        'cliente_id': clienteId.trim(),
+        'convite': convite.trim(),
       }),
     );
 
@@ -99,6 +99,9 @@ class AuthService extends ChangeNotifier {
   }
 
   String _extractMessage(http.Response response, {required String fallback}) {
+    if (response.statusCode == 429) {
+      return 'Muitas tentativas. Aguarde um minuto e tente de novo.';
+    }
     final body = response.body.trim();
     if (body.isEmpty) {
       return fallback;
