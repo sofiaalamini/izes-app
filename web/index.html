@@ -110,8 +110,8 @@
       function atualizar() {
         var caixa = document.getElementById('erro-inicio');
         var texto = document.getElementById('erro-inicio-texto');
-        if (!caixa || !texto || !mensagens.length) return;
-        caixa.style.display = 'block';
+        if (!caixa || !texto) return;
+        caixa.style.display = mensagens.length ? 'block' : 'none';
         texto.textContent = mensagens.join(' | ');
       }
       function registrar(texto) { mensagens.push(texto); atualizar(); }
@@ -123,11 +123,28 @@
         registrar('Falha: ' + ((r && (r.message || r.toString())) || 'desconhecida'));
       });
       document.addEventListener('DOMContentLoaded', atualizar);
+      // Avisos de demora: somem sozinhos quando o app termina de abrir (no celular o primeiro
+      // carregamento é lento, cerca de 10 MB).
+      var AVISO_DEMORA = 'O app está demorando para abrir. Aguarde mais um pouco.';
+      var AVISO_FALHA = 'O app não abriu depois de 60 segundos.';
+      var iniciou = false;
+      function appAbriu() {
+        return !!document.querySelector('flt-glass-pane, flutter-view, flt-scene-host');
+      }
+      var vigia = setInterval(function () {
+        if (!appAbriu()) return;
+        iniciou = true;
+        clearInterval(vigia);
+        mensagens = mensagens.filter(function (m) { return m !== AVISO_DEMORA && m !== AVISO_FALHA; });
+        atualizar();
+      }, 500);
+      setTimeout(function () { if (!iniciou) registrar(AVISO_DEMORA); }, 20000);
       setTimeout(function () {
-        if (!document.querySelector('flt-glass-pane')) {
-          registrar('O app não iniciou depois de 20 segundos.');
+        if (!iniciou) {
+          mensagens = mensagens.filter(function (m) { return m !== AVISO_DEMORA; });
+          registrar(AVISO_FALHA);
         }
-      }, 20000);
+      }, 60000);
     })();
   </script>
 </head>
