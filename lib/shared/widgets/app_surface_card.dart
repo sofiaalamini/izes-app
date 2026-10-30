@@ -22,13 +22,11 @@ class AppSurfaceCard extends StatelessWidget {
       color: backgroundColor,
       clipBehavior: Clip.antiAlias,
       shadowColor: const Color(0x180F180E),
-      elevation: borderColor == null ? 1 : 0,
+      elevation: 0,
       margin: EdgeInsets.zero,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(borderRadius),
-        side: borderColor == null
-            ? BorderSide.none
-            : BorderSide(color: borderColor!),
+        side: BorderSide(color: borderColor ?? const Color(0xFFE6DFD0)),
       ),
       child: Padding(padding: padding, child: child),
     );

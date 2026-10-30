@@ -71,13 +71,28 @@ class _IzesHomePageState extends State<IzesHomePage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        title: Row(
           children: [
-            Text('IZES', style: Theme.of(context).textTheme.titleLarge),
-            Text(
-              _subtitleForSection(_section),
-              style: Theme.of(context).textTheme.bodyMedium,
+            Image.asset('assets/branding/logo_mark.png', height: 34),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    _section.label,
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      color: IzesColors.cream,
+                    ),
+                  ),
+                  Text(
+                    _subtitleForSection(_section),
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: IzesColors.cream.withValues(alpha: 0.75),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ],
         ),
@@ -89,9 +104,11 @@ class _IzesHomePageState extends State<IzesHomePage> {
                 height: 34,
                 width: 34,
                 decoration: BoxDecoration(
-                  color: IzesColors.surfaceSoft,
+                  color: IzesColors.cream.withValues(alpha: 0.14),
                   shape: BoxShape.circle,
-                  border: Border.all(color: IzesColors.line),
+                  border: Border.all(
+                    color: IzesColors.cream.withValues(alpha: 0.4),
+                  ),
                 ),
                 child: Center(
                   child: Text(
@@ -99,7 +116,7 @@ class _IzesHomePageState extends State<IzesHomePage> {
                         ? 'I'
                         : userLabel.trim().substring(0, 1).toUpperCase(),
                     style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                      color: IzesColors.greenDark,
+                      color: IzesColors.cream,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
@@ -119,6 +136,15 @@ class _IzesHomePageState extends State<IzesHomePage> {
           child: ListView(
             padding: const EdgeInsets.all(12),
             children: [
+              Container(
+                margin: const EdgeInsets.only(bottom: 8),
+                padding: const EdgeInsets.symmetric(vertical: 18),
+                decoration: BoxDecoration(
+                  color: IzesColors.greenDark,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Image.asset('assets/branding/logo_full.png', height: 44),
+              ),
               ListTile(
                 title: Text(
                   userLabel,
@@ -141,6 +167,7 @@ class _IzesHomePageState extends State<IzesHomePage> {
                   ),
                   title: Text(item.label),
                   selected: item == _section,
+                  selectedTileColor: IzesColors.greenSoft,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
                   ),

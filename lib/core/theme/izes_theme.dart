@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class IzesColors {
-  static const canvas = Color(0xFFF3F0E6);
+  static const canvas = Color(0xFFF6F3EB);
   static const surface = Color(0xFFFFFCF7);
   static const surfaceAlt = Color(0xFFF1E8D9);
   static const surfaceSoft = Color(0xFFF7F3EA);
@@ -9,7 +10,9 @@ class IzesColors {
   static const muted = Color(0xFF64705E);
   static const line = Color(0xFFDCD4C5);
   static const green = Color(0xFF166534);
-  static const greenDark = Color(0xFF214E30);
+  static const greenDark = Color(0xFF1E4D2B);
+  static const cream = Color(0xFFF5F0E8);
+  static const leaf = Color(0xFF82CC36);
   static const greenSoft = Color(0xFFDCFCE7);
   static const earth = Color(0xFF8A5D41);
   static const earthSoft = Color(0xFFF2E4D6);
@@ -68,19 +71,19 @@ class IzesTheme {
         ),
         bodyLarge: TextStyle(fontSize: 16, height: 1.5, color: IzesColors.ink),
         bodyMedium: TextStyle(
-          fontSize: 14,
+          fontSize: 15,
           height: 1.55,
           color: IzesColors.muted,
         ),
         bodySmall: TextStyle(
-          fontSize: 12,
+          fontSize: 13,
           height: 1.45,
           color: IzesColors.muted,
         ),
         labelMedium: TextStyle(
-          fontSize: 11,
+          fontSize: 12,
           fontWeight: FontWeight.w600,
-          letterSpacing: 0.35,
+          letterSpacing: 0.3,
           color: IzesColors.muted,
         ),
       ),
@@ -88,12 +91,14 @@ class IzesTheme {
 
     return base.copyWith(
       appBarTheme: const AppBarTheme(
-        backgroundColor: IzesColors.canvas,
-        foregroundColor: IzesColors.ink,
+        backgroundColor: IzesColors.greenDark,
+        foregroundColor: IzesColors.cream,
+        surfaceTintColor: Colors.transparent,
         elevation: 0,
         scrolledUnderElevation: 0,
         centerTitle: false,
-        toolbarHeight: 70,
+        toolbarHeight: 68,
+        systemOverlayStyle: SystemUiOverlayStyle.light,
       ),
       cardTheme: CardThemeData(
         color: IzesColors.surface,
@@ -101,7 +106,7 @@ class IzesTheme {
         shadowColor: const Color(0x33203321),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(18),
-          side: BorderSide.none,
+          side: const BorderSide(color: IzesColors.line),
         ),
       ),
       filledButtonTheme: FilledButtonThemeData(
@@ -139,13 +144,13 @@ class IzesTheme {
         shadowColor: const Color(0x1A2E6840),
         elevation: 0,
         height: 72,
-        indicatorColor: IzesColors.surfaceAlt,
+        indicatorColor: IzesColors.greenSoft,
         indicatorShape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
         ),
         labelTextStyle: WidgetStateProperty.resolveWith(
           (states) => TextStyle(
-            fontSize: 10.5,
+            fontSize: 11.5,
             fontWeight: states.contains(WidgetState.selected)
                 ? FontWeight.w700
                 : FontWeight.w600,

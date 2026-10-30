@@ -92,17 +92,17 @@ class _LoginPageState extends State<LoginPage> {
     return Scaffold(
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(20, 28, 20, 20),
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
           children: [
-            const SizedBox(height: 28),
-            Text(
-              'IZES',
-              style: theme.headlineLarge?.copyWith(
-                fontSize: 32,
-                fontWeight: FontWeight.w700,
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 28),
+              decoration: BoxDecoration(
+                color: IzesColors.greenDark,
+                borderRadius: BorderRadius.circular(22),
               ),
+              child: Image.asset('assets/branding/logo_full.png', height: 84),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 24),
             Text(
               _isRegisterMode
                   ? 'Crie seu acesso para acompanhar a operação.'
