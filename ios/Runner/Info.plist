@@ -51,6 +51,13 @@
 		<string>O IZES usa a camera para enviar fotos para analise da IA.</string>
 		<key>NSPhotoLibraryUsageDescription</key>
 		<string>O IZES acessa sua galeria para enviar imagens para analise da IA.</string>
+		<key>NSAppTransportSecurity</key>
+		<dict>
+			<key>NSAllowsLocalNetworking</key>
+			<true/>
+		</dict>
+		<key>NSLocalNetworkUsageDescription</key>
+		<string>O IZES usa a rede local para se conectar ao servidor de testes.</string>
 		<key>UIStatusBarHidden</key>
 		<false/>
 	</dict>
