@@ -13,7 +13,7 @@ Future<void> main() async {
     debugPrintStack(stackTrace: stackTrace);
   }
 
-  await AuthService().restoreSession();
+  await restoreSessionSafely(AuthService().restoreSession);
 
   runApp(const IzesApp());
 }

@@ -239,6 +239,19 @@ class AuthService extends ChangeNotifier {
   }
 }
 
+/// Restaura a sessão salva sem nunca impedir o app de abrir: se o armazenamento
+/// demorar mais que [timeout] ou der erro, o app abre na tela de login.
+Future<void> restoreSessionSafely(
+  Future<void> Function() restore, {
+  Duration timeout = const Duration(seconds: 4),
+}) async {
+  try {
+    await restore().timeout(timeout);
+  } catch (error) {
+    debugPrint('AuthService: abrindo sem sessão salva ($error)');
+  }
+}
+
 class AuthException implements Exception {
   const AuthException(this.message);
 

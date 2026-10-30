@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>IZES - Diagnóstico</title>
+  <style>
+    body { margin: 0; padding: 16px; background: #F4F0E8; color: #1b1b1b; font: 16px/1.45 -apple-system, "Helvetica Neue", Arial, sans-serif; }
+    h1 { font-size: 22px; margin: 0 0 4px; }
+    p.sub { margin: 0 0 14px; color: #555; }
+    .linha { padding: 8px 10px; margin: 6px 0; background: #fff; border-radius: 10px; border-left: 6px solid #bbb; word-break: break-word; }
+    .ok { border-left-color: #2e7d32; }
+    .falha { border-left-color: #c62828; background: #fdecea; }
+    .aviso { border-left-color: #ef6c00; }
+    .nome { font-weight: 600; }
+    .det { color: #444; font-size: 14px; }
+    #resumo { font-weight: 700; margin: 12px 0; font-size: 18px; }
+    button { font-size: 16px; padding: 10px 14px; margin: 4px 6px 4px 0; border-radius: 10px; border: 1px solid #2e7d32; background: #fff; color: #1b5e20; }
+    a { color: #1b5e20; }
+  </style>
+</head>
+<body>
+  <h1>Diagnóstico do IZES</h1>
+  <p class="sub">Tire um print desta tela e envie. Esta página não usa o app, então funciona mesmo se ele falhar.</p>
+  <div id="resumo">Testando…</div>
+  <div id="resultado"></div>
+  <p>
+    <button id="limpar">Limpar cache e recarregar</button>
+    <a href="./">Abrir o app</a>
+  </p>
+
+  <script>
+    var falhas = 0;
+    var avisos = 0;
+    var alvo = document.getElementById('resultado');
+
+    function linha(tipo, nome, detalhe) {
+      if (tipo === 'falha') falhas++;
+      if (tipo === 'aviso') avisos++;
+      var div = document.createElement('div');
+      div.className = 'linha ' + tipo;
+      var marca = tipo === 'ok' ? '✔ ' : (tipo === 'falha' ? '✖ ' : '⚠ ');
+      var n = document.createElement('div');
+      n.className = 'nome';
+      n.textContent = marca + nome;
+      div.appendChild(n);
+      if (detalhe) {
+        var d = document.createElement('div');
+        d.className = 'det';
+        d.textContent = detalhe;
+        div.appendChild(d);
+      }
+      alvo.appendChild(div);
+    }
+
+    function msg(e) { return (e && (e.message || e.name)) ? (e.name ? e.name + ': ' : '') + (e.message || '') : String(e); }
+
+    function medir(url) {
+      var inicio = Date.now();
+      return fetch(url, { cache: 'no-store' }).then(function (r) {
+        return r.arrayBuffer().then(function (buf) {
+          return { status: r.status, bytes: buf.byteLength, ms: Date.now() - inicio, buf: buf };
+        });
+      });
+    }
+
+    function sincronos() {
+      linha('ok', 'Aparelho', navigator.userAgent);
+      linha(window.isSecureContext ? 'ok' : 'falha', 'Conexão segura (https)',
+        window.isSecureContext ? 'Sim' : 'NÃO. GPS e login salvo não funcionam sem https.');
+
+      var cv = document.createElement('canvas');
+      var gl2 = null, gl1 = null;
+      try { gl2 = cv.getContext('webgl2'); } catch (e) {}
+      try { gl1 = cv.getContext('webgl') || cv.getContext('experimental-webgl'); } catch (e) {}
+      linha(gl2 ? 'ok' : (gl1 ? 'aviso' : 'falha'), 'WebGL (desenho do app)',
+        gl2 ? 'WebGL2 disponível' : (gl1 ? 'Só WebGL1: o app pode falhar' : 'INDISPONÍVEL: o app não consegue desenhar (Modo de Bloqueio ou economia de energia?)'));
+
+      var wasm = typeof WebAssembly === 'object' && WebAssembly.validate &&
+        WebAssembly.validate(new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0]));
+      linha(wasm ? 'ok' : 'falha', 'WebAssembly', wasm ? 'Disponível' : 'INDISPONÍVEL: o app não roda (Modo de Bloqueio?)');
+
+      linha(window.crypto && window.crypto.subtle ? 'ok' : 'aviso', 'Criptografia do navegador',
+        window.crypto && window.crypto.subtle ? 'Disponível' : 'Indisponível: o login salvo não funciona');
+
+      try {
+        localStorage.setItem('izes_diag', '1');
+        var lido = localStorage.getItem('izes_diag');
+        localStorage.removeItem('izes_diag');
+        linha(lido === '1' ? 'ok' : 'aviso', 'Armazenamento local', lido === '1' ? 'Funciona' : 'Não gravou');
+      } catch (e) {
+        linha('aviso', 'Armazenamento local', 'Bloqueado: ' + msg(e) + ' (aba privada?)');
+      }
+
+      var escuro = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      linha('ok', 'Tela', window.innerWidth + 'x' + window.innerHeight + ' (pixel ' + (window.devicePixelRatio || 1) +
+        '), modo ' + (escuro ? 'escuro' : 'claro'));
+    }
+
+    function servidor() {
+      var passos = [];
+      passos.push(medir('main.dart.js').then(function (r) {
+        linha(r.status === 200 && r.bytes > 100000 ? 'ok' : 'falha', 'Código do app (main.dart.js)',
+          'HTTP ' + r.status + ', ' + Math.round(r.bytes / 1024) + ' KB em ' + r.ms + ' ms');
+      }).catch(function (e) { linha('falha', 'Código do app (main.dart.js)', msg(e)); }));
+
+      passos.push(medir('canvaskit/canvaskit.wasm').then(function (r) {
+        var ok = r.status === 200 && r.bytes > 100000;
+        linha(ok ? 'ok' : 'falha', 'Motor de desenho (canvaskit.wasm)',
+          'HTTP ' + r.status + ', ' + Math.round(r.bytes / 1024) + ' KB em ' + r.ms + ' ms');
+        if (!ok || typeof WebAssembly !== 'object') return;
+        var t = Date.now();
+        return WebAssembly.compile(r.buf).then(function () {
+          linha('ok', 'Compilar o motor de desenho', 'Compilou em ' + (Date.now() - t) + ' ms');
+        }).catch(function (e) {
+          linha('falha', 'Compilar o motor de desenho', msg(e) + ' (pouca memória ou bloqueio do navegador)');
+        });
+      }).catch(function (e) { linha('falha', 'Motor de desenho (canvaskit.wasm)', msg(e)); }));
+
+      passos.push(fetch('https://www.gstatic.com/generate_204', { mode: 'no-cors', cache: 'no-store' }).then(function () {
+        linha('ok', 'Servidor de recursos do Google (gstatic)', 'Alcançável');
+      }).catch(function (e) {
+        linha('aviso', 'Servidor de recursos do Google (gstatic)', 'Não alcançável: ' + msg(e));
+      }));
+
+      passos.push(fetch('manifest.json', { cache: 'no-store' }).then(function (r) {
+        linha(r.ok ? 'ok' : 'aviso', 'Manifesto do app', 'HTTP ' + r.status);
+      }).catch(function (e) { linha('aviso', 'Manifesto do app', msg(e)); }));
+
+      if ('serviceWorker' in navigator && navigator.serviceWorker.getRegistrations) {
+        passos.push(navigator.serviceWorker.getRegistrations().then(function (regs) {
+          linha('ok', 'Service worker', regs.length + ' registrado(s)' + (regs.length ? ' (se o app estiver estranho, use "Limpar cache")' : ''));
+        }).catch(function (e) { linha('aviso', 'Service worker', msg(e)); }));
+      }
+      return Promise.all(passos);
+    }
+
+    function resumo() {
+      var el = document.getElementById('resumo');
+      if (falhas) { el.textContent = '✖ ' + falhas + ' problema(s) encontrado(s)'; el.style.color = '#c62828'; }
+      else if (avisos) { el.textContent = '⚠ Sem falhas graves, ' + avisos + ' aviso(s)'; el.style.color = '#ef6c00'; }
+      else { el.textContent = '✔ Tudo certo neste aparelho'; el.style.color = '#2e7d32'; }
+    }
+
+    document.getElementById('limpar').onclick = function () {
+      var tarefas = [];
+      if ('serviceWorker' in navigator && navigator.serviceWorker.getRegistrations) {
+        tarefas.push(navigator.serviceWorker.getRegistrations().then(function (regs) {
+          return Promise.all(regs.map(function (r) { return r.unregister(); }));
+        }));
+      }
+      if (window.caches && caches.keys) {
+        tarefas.push(caches.keys().then(function (ks) { return Promise.all(ks.map(function (k) { return caches.delete(k); })); }));
+      }
+      Promise.all(tarefas).then(function () { location.reload(); }, function () { location.reload(); });
+    };
+
+    try { sincronos(); } catch (e) { linha('falha', 'Testes do aparelho', msg(e)); }
+    servidor().then(resumo, resumo);
+  </script>
+</body>
+</html>

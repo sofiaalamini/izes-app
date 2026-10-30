@@ -96,6 +96,40 @@
     }
   </script>
   <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport">
+  <style id="erro-inicio-style">
+    #erro-inicio { display: none; position: fixed; left: 0; right: 0; bottom: 0; max-height: 45%; overflow: auto;
+      padding: 10px 14px; background: #2b2b2b; color: #fff; z-index: 2147483647;
+      font: 13px/1.4 -apple-system, "Helvetica Neue", Arial, sans-serif; }
+    #erro-inicio pre { margin: 0 0 8px; white-space: pre-wrap; word-break: break-word; font: inherit; }
+    #erro-inicio a { color: #a5d6a7; }
+  </style>
+  <script id="erro-inicio-script">
+    // Mostra na tela erros de inicialização (no iPhone não há console fácil de abrir).
+    (function () {
+      var mensagens = [];
+      function atualizar() {
+        var caixa = document.getElementById('erro-inicio');
+        var texto = document.getElementById('erro-inicio-texto');
+        if (!caixa || !texto || !mensagens.length) return;
+        caixa.style.display = 'block';
+        texto.textContent = mensagens.join(' | ');
+      }
+      function registrar(texto) { mensagens.push(texto); atualizar(); }
+      window.addEventListener('error', function (e) {
+        registrar('Erro: ' + (e.message || 'desconhecido') + (e.filename ? ' (' + e.filename.split('/').pop() + ':' + e.lineno + ')' : ''));
+      });
+      window.addEventListener('unhandledrejection', function (e) {
+        var r = e.reason;
+        registrar('Falha: ' + ((r && (r.message || r.toString())) || 'desconhecida'));
+      });
+      document.addEventListener('DOMContentLoaded', atualizar);
+      setTimeout(function () {
+        if (!document.querySelector('flt-glass-pane')) {
+          registrar('O app não iniciou depois de 20 segundos.');
+        }
+      }, 20000);
+    })();
+  </script>
 </head>
 <body>
   <picture id="splash">
@@ -103,6 +137,7 @@
       <source srcset="splash/img/dark-1x.png 1x, splash/img/dark-2x.png 2x, splash/img/dark-3x.png 3x, splash/img/dark-4x.png 4x" media="(prefers-color-scheme: dark)">
       <img class="center" aria-hidden="true" src="splash/img/light-1x.png" alt="">
   </picture>
+  <div id="erro-inicio"><pre id="erro-inicio-texto"></pre><a href="diagnostico.html">Abrir o diagnóstico</a></div>
   <script src="flutter_bootstrap.js" async=""></script>
 
 
