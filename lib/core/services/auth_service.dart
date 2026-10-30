@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 import '../config/backend_config.dart';
+import '../utils/convite.dart';
 import 'cache_service.dart';
 import 'session_store.dart';
 
@@ -144,7 +145,7 @@ class AuthService extends ChangeNotifier {
         'nome': nome.trim(),
         'email': email.trim(),
         'password': password,
-        'convite': convite.trim(),
+        'convite': normalizarConvite(convite),
       }),
     );
 

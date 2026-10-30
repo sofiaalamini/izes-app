@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/services/auth_service.dart';
 import '../../../../core/theme/izes_theme.dart';
+import '../../../../core/utils/convite.dart';
 import '../../../../shared/widgets/app_state_card.dart';
 import '../../../../shared/widgets/app_surface_card.dart';
 
@@ -23,6 +24,17 @@ class _LoginPageState extends State<LoginPage> {
   bool _isRegisterMode = false;
   bool _isSubmitting = false;
   String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    // Link de convite (.../app/?convite=...): abre direto no cadastro, com o código preenchido.
+    final convite = conviteDoLink(Uri.base);
+    if (convite != null) {
+      _inviteController.text = convite;
+      _isRegisterMode = true;
+    }
+  }
 
   @override
   void dispose() {
@@ -163,6 +175,12 @@ class _LoginPageState extends State<LoginPage> {
                       TextFormField(
                         controller: _inviteController,
                         textInputAction: TextInputAction.next,
+                        keyboardType: TextInputType.multiline,
+                        minLines: 1,
+                        maxLines: 4,
+                        autocorrect: false,
+                        enableSuggestions: false,
+                        textCapitalization: TextCapitalization.none,
                         decoration: const InputDecoration(
                           hintText: 'Código recebido do administrador',
                         ),
