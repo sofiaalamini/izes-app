@@ -1,11 +1,11 @@
 {
-    "name": "izesapp",
-    "short_name": "izesapp",
+    "name": "IZES",
+    "short_name": "IZES",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "description": "IZES: monitoramento de solo, clima e alertas para a sua lavoura.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

@@ -7,11 +7,30 @@ class BackendConfig {
 
   /// No APK em celular físico, API_BASE_URL deve ser o IP do notebook na
   /// mesma rede Wi-Fi (ex.: http://192.168.0.10:8000).
-  static String get baseUrl {
-    final raw = dotenv.env['API_BASE_URL']?.trim();
+  ///
+  /// Quando o app web é servido pelo próprio backend (em `/app`), a API fica na
+  /// mesma origem da página e `API_BASE_URL` é ignorada.
+  static String get baseUrl => resolveBaseUrl(
+    dotenv.env['API_BASE_URL']?.trim(),
+    isWeb: kIsWeb,
+    pageUri: Uri.base,
+    isAndroid: defaultTargetPlatform == TargetPlatform.android,
+  );
+
+  @visibleForTesting
+  static String resolveBaseUrl(
+    String? raw, {
+    required bool isWeb,
+    required Uri pageUri,
+    required bool isAndroid,
+  }) {
+    if (isWeb && (pageUri.path == '/app' || pageUri.path.startsWith('/app/'))) {
+      return pageUri.origin;
+    }
+
     if (raw == null || raw.isEmpty) {
       debugPrint('API_BASE_URL ausente no .env. Usando backend local.');
-      if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
+      if (!isWeb && isAndroid) {
         return _androidEmulatorBaseUrl;
       }
       return _localBaseUrl;
@@ -25,7 +44,7 @@ class BackendConfig {
         normalized.startsWith('http://127.0.0.1:');
 
     // O emulador Android acessa o host de desenvolvimento por 10.0.2.2.
-    if (isLocalhost && defaultTargetPlatform == TargetPlatform.android) {
+    if (!isWeb && isLocalhost && isAndroid) {
       final port = Uri.parse(normalized).port;
       return 'http://10.0.2.2:$port';
     }
